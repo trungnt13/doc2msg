@@ -63,12 +63,12 @@ All design plans and execution records live in `ai-docs/`. Why: the live session
 
 | Type | Naming | Purpose |
 |------|--------|---------|
-| Design spec | `<project>-design-spec.md` | Architecture, API design, phase roadmap — the *intent* |
-| Execution record | `<project>-execution-record.md` | What was built, validated, deferred — the *outcome* |
+| Design spec | `design-spec-<goal>.md` | Architecture, API design, phase roadmap — the *intent* |
+| Execution record | `execution-record-<goal>.md` | What was built, validated, deferred — the *outcome* |
 
 - Create the design spec when starting a multi-phase effort.
 - Create the execution record before closing the task if the work spanned multiple phases, deployments, or benchmarks.
-- For focused efforts (bug fixes, optimizations, refactors), use `<project>-<topic>-record.md` — e.g., `doc2agent-latency-optimization-record.md`.
+- For focused efforts (bug fixes, optimizations, refactors), the convention is uniform: `execution-record-<goal>.md` — e.g., `execution-record-latency-optimization.md`.
 - The execution record must include a **Deviations from Design Spec** section listing anything designed but not implemented, changed, or deferred.
 
 **Every document in `ai-docs/` must begin with YAML frontmatter:**
@@ -95,9 +95,9 @@ finished: <ISO-8601 timestamp or empty if in-progress>
 If there is an active session `plan.md`, keep it current during execution and then publish the durable archive to `ai-docs/` when the effort is complete.
 
 **Before marking a task complete**, verify:
-- [ ] Session plan archived to `ai-docs/<project>-<topic>-record.md` with YAML frontmatter
+- [ ] Session plan archived to `ai-docs/execution-record-<goal>.md` with YAML frontmatter
 - [ ] Deviations from original plan documented
-- [ ] File names follow `<project>-` prefix convention
+- [ ] File names follow `design-spec-` / `execution-record-` prefix convention
 
 ---
 
@@ -205,7 +205,7 @@ Responses stream as NDJSON — chunks emitted as soon as each section is ready, 
 | 4 — Rich PDF Fallback | pdfium-render, bitmap reuse, quality-based escalation to OCR | Complete |
 | 5 — Production Hardening | Content-addressed cache, Prometheus metrics, Docker, load testing | Complete |
 
-Implement phases sequentially. Design: [`ai-docs/doc2agent-design-spec.md`](ai-docs/doc2agent-design-spec.md) · Execution record: [`ai-docs/doc2agent-execution-record.md`](ai-docs/doc2agent-execution-record.md)
+Implement phases sequentially. Design: [`ai-docs/design-spec-document-conversion-service.md`](ai-docs/design-spec-document-conversion-service.md) · Execution record: [`ai-docs/execution-record-document-conversion-service.md`](ai-docs/execution-record-document-conversion-service.md)
 
 ---
 
