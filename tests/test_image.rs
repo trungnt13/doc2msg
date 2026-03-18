@@ -4,28 +4,28 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use bytes::Bytes;
-use doc2agent::pipeline;
-use doc2agent::pipeline::image::ImagePipeline;
-use doc2agent::resolver::{SourceDescriptor, SourceKind};
+use doc2msg::pipeline;
+use doc2msg::pipeline::image::ImagePipeline;
+use doc2msg::resolver::{SourceDescriptor, SourceKind};
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgb};
 
 fn local_full_ocr_assets_available() -> bool {
     resolve_existing_path(
-        &["DOC2AGENT_DET_MODEL", "DOC2AGENT_TEST_DET_MODEL"],
+        &["DOC2MSG_DET_MODEL", "DOC2MSG_TEST_DET_MODEL"],
         "models/det_model.onnx",
     )
     .is_some()
         && resolve_existing_path(
             &[
-                "DOC2AGENT_MODEL_PATH",
-                "DOC2AGENT_REC_MODEL",
-                "DOC2AGENT_TEST_REC_MODEL",
+                "DOC2MSG_MODEL_PATH",
+                "DOC2MSG_REC_MODEL",
+                "DOC2MSG_TEST_REC_MODEL",
             ],
             "models/rec_model.onnx",
         )
         .is_some()
         && resolve_existing_path(
-            &["DOC2AGENT_DICT_PATH", "DOC2AGENT_TEST_REC_DICT"],
+            &["DOC2MSG_DICT_PATH", "DOC2MSG_TEST_REC_DICT"],
             "models/ppocr_keys_v1.txt",
         )
         .is_some()
@@ -46,7 +46,7 @@ fn resolve_existing_path(env_keys: &[&str], repo_relative: &str) -> Option<PathB
 async fn image_pipeline_runs_when_local_models_are_available() -> Result<()> {
     if !local_full_ocr_assets_available() {
         eprintln!(
-            "skipping full-image OCR integration test; provide detector, recognizer, and dictionary assets in models/ or via DOC2AGENT_* env vars"
+            "skipping full-image OCR integration test; provide detector, recognizer, and dictionary assets in models/ or via DOC2MSG_* env vars"
         );
         return Ok(());
     }
@@ -79,7 +79,7 @@ async fn dispatch_routes_image_sources_through_image_ocr_pipeline_when_local_mod
 ) -> Result<()> {
     if !local_full_ocr_assets_available() {
         eprintln!(
-            "skipping image dispatch integration test; provide detector, recognizer, and dictionary assets in models/ or via DOC2AGENT_* env vars"
+            "skipping image dispatch integration test; provide detector, recognizer, and dictionary assets in models/ or via DOC2MSG_* env vars"
         );
         return Ok(());
     }

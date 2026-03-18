@@ -1,6 +1,6 @@
 ---
 status: completed
-goal: Optimize doc2agent for latency — Docker serving, correctness fixes, and latency tuning
+goal: Optimize doc2msg for latency — Docker serving, correctness fixes, and latency tuning
 prompt: serving docker container with docker compose (minimal and fast), verifying the correctness and efficiency of the code, optimization of latency (latency is the only metric need to focus here)
 created: 2026-03-18T10:00:00Z
 finished: 2026-03-18T12:00:00Z
@@ -10,7 +10,7 @@ finished: 2026-03-18T12:00:00Z
 
 ## Objective
 
-Make doc2agent production-ready with three goals: Docker Compose serving (minimal, fast), code correctness and efficiency verification, and latency optimization. Latency was the **only** metric that mattered — all changes either reduced latency or did not regress it.
+Make doc2msg production-ready with three goals: Docker Compose serving (minimal, fast), code correctness and efficiency verification, and latency optimization. Latency was the **only** metric that mattered — all changes either reduced latency or did not regress it.
 
 Work proceeded in four phases: correctness fixes (foundation), Docker optimization (deployment), latency tuning (primary goal), and test improvements (validation).
 
@@ -47,7 +47,7 @@ Three performance issues fixed:
 
 ### 2.1 Optimize Dockerfile
 
-- Added non-root user (`doc2agent`) to runtime stage for security.
+- Added non-root user (`doc2msg`) to runtime stage for security.
 - Set thread defaults to 0 (`INTRA_THREADS=0`, `INTER_THREADS=0`) for auto-detection based on available cores.
 
 ### 2.2 Production `docker-compose.yml`
@@ -184,7 +184,7 @@ Three benchmark tests gated with `#[ignore]` (run via `cargo test --ignored --no
 
 | File | Changes |
 |------|---------|
-| `Dockerfile` | Non-root user (`doc2agent`), thread defaults 0 |
+| `Dockerfile` | Non-root user (`doc2msg`), thread defaults 0 |
 | `docker-compose.yml` | Resource limits, logging rotation, `shm_size` |
 | `docker-compose.cpu.yml` | New: CPU-only dev/CI profile without NVIDIA runtime |
 | `docker/entrypoint.sh` | Fail-fast model validation, config summary logging |

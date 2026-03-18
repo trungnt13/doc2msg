@@ -100,7 +100,7 @@ impl OcrService {
                 }
             },
             (None, None) => Self::NotConfigured {
-                reason: "OCR is not configured; set both DOC2AGENT_MODEL_PATH and DOC2AGENT_DICT_PATH to enable /v1/ocr".to_string(),
+                reason: "OCR is not configured; set both DOC2MSG_MODEL_PATH and DOC2MSG_DICT_PATH to enable /v1/ocr".to_string(),
             },
             _ => Self::Unavailable {
                 reason: "OCR configuration is incomplete; set both model_path and dict_path".to_string(),

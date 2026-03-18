@@ -8,16 +8,16 @@ append_library_path() {
   fi
 }
 
-if [[ -z "${DOC2AGENT_DET_MODEL:-}" && -f /models/det_model.onnx ]]; then
-  export DOC2AGENT_DET_MODEL=/models/det_model.onnx
+if [[ -z "${DOC2MSG_DET_MODEL:-}" && -f /models/det_model.onnx ]]; then
+  export DOC2MSG_DET_MODEL=/models/det_model.onnx
 fi
 
-if [[ -z "${DOC2AGENT_MODEL_PATH:-}" && -f /models/rec_model.onnx ]]; then
-  export DOC2AGENT_MODEL_PATH=/models/rec_model.onnx
+if [[ -z "${DOC2MSG_MODEL_PATH:-}" && -f /models/rec_model.onnx ]]; then
+  export DOC2MSG_MODEL_PATH=/models/rec_model.onnx
 fi
 
-if [[ -z "${DOC2AGENT_DICT_PATH:-}" && -f /models/ppocr_keys_v1.txt ]]; then
-  export DOC2AGENT_DICT_PATH=/models/ppocr_keys_v1.txt
+if [[ -z "${DOC2MSG_DICT_PATH:-}" && -f /models/ppocr_keys_v1.txt ]]; then
+  export DOC2MSG_DICT_PATH=/models/ppocr_keys_v1.txt
 fi
 
 if [[ -z "${ORT_LIB_DIR:-}" && -f /opt/onnxruntime/libonnxruntime.so ]]; then
@@ -28,12 +28,12 @@ if [[ -n "${ORT_LIB_DIR:-}" ]]; then
   append_library_path "$ORT_LIB_DIR"
 fi
 
-if [[ -z "${DOC2AGENT_PDFIUM_LIB_PATH:-}" && -f /opt/pdfium/libpdfium.so ]]; then
-  export DOC2AGENT_PDFIUM_LIB_PATH=/opt/pdfium/libpdfium.so
+if [[ -z "${DOC2MSG_PDFIUM_LIB_PATH:-}" && -f /opt/pdfium/libpdfium.so ]]; then
+  export DOC2MSG_PDFIUM_LIB_PATH=/opt/pdfium/libpdfium.so
 fi
 
-if [[ -n "${DOC2AGENT_PDFIUM_LIB_PATH:-}" ]]; then
-  pdfium_dir="$DOC2AGENT_PDFIUM_LIB_PATH"
+if [[ -n "${DOC2MSG_PDFIUM_LIB_PATH:-}" ]]; then
+  pdfium_dir="$DOC2MSG_PDFIUM_LIB_PATH"
   if [[ -f "$pdfium_dir" ]]; then
     pdfium_dir="$(dirname "$pdfium_dir")"
   fi
@@ -41,7 +41,7 @@ if [[ -n "${DOC2AGENT_PDFIUM_LIB_PATH:-}" ]]; then
 fi
 
 if [[ $# -eq 0 ]]; then
-  set -- doc2agent
+  set -- doc2msg
 fi
 
 exec "$@"

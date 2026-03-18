@@ -9,8 +9,8 @@ use pdfium_render::prelude::{
     PdfBitmap, PdfBitmapFormat, PdfPageRenderRotation, PdfRenderConfig, Pdfium,
 };
 
-const PDFIUM_ENABLED_ENV: &str = "DOC2AGENT_PDFIUM_ENABLED";
-const PDFIUM_LIB_PATH_ENV: &str = "DOC2AGENT_PDFIUM_LIB_PATH";
+const PDFIUM_ENABLED_ENV: &str = "DOC2MSG_PDFIUM_ENABLED";
+const PDFIUM_LIB_PATH_ENV: &str = "DOC2MSG_PDFIUM_LIB_PATH";
 const PDFIUM_RENDER_TARGET_WIDTH: i32 = 1800;
 const PDFIUM_RENDER_MAX_HEIGHT: i32 = 2400;
 const PAGE_DIMENSION_EPSILON: f32 = 0.1;

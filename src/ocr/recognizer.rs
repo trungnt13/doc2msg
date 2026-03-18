@@ -429,7 +429,7 @@ mod tests {
         fn new(tokens: &[&str]) -> Result<Self> {
             let unique_id = SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos();
             let path = env::temp_dir().join(format!(
-                "doc2agent-recognizer-dict-{}-{unique_id}.txt",
+                "doc2msg-recognizer-dict-{}-{unique_id}.txt",
                 std::process::id()
             ));
             fs::write(&path, tokens.join("\n"))?;

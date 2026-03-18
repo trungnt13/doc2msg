@@ -29,7 +29,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN cargo build --locked --release --features "${CARGO_FEATURES}" --bin doc2agent \
+RUN cargo build --locked --release --features "${CARGO_FEATURES}" --bin doc2msg \
     && mkdir -p /opt/onnxruntime \
     && ort_dir="$(find "${HOME}/.cache/ort.pyke.io" -type f \( -name 'libonnxruntime.so*' -o -name 'libonnxruntime_providers_shared.so' \) -print -quit 2>/dev/null | xargs -r dirname)" \
     && if [[ -n "${ort_dir}" ]]; then cp -a "${ort_dir}/." /opt/onnxruntime/; fi
@@ -51,31 +51,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY --from=builder /app/target/release/doc2agent /usr/local/bin/doc2agent
+COPY --from=builder /app/target/release/doc2msg /usr/local/bin/doc2msg
 COPY --from=builder /opt/onnxruntime /opt/onnxruntime
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
     && mkdir -p /models /opt/pdfium
 
-ENV DOC2AGENT_HOST=0.0.0.0 \
-    DOC2AGENT_PORT=3000 \
-    DOC2AGENT_REQUEST_TIMEOUT=60 \
-    DOC2AGENT_MAX_BODY_SIZE=52428800 \
-    DOC2AGENT_EXTRACTION_CONCURRENCY=16 \
-    DOC2AGENT_OCR_CONCURRENCY=4 \
-    DOC2AGENT_SESSION_POOL_SIZE=4 \
-    DOC2AGENT_MAX_BATCH=32 \
-    DOC2AGENT_INTRA_THREADS=1 \
-    DOC2AGENT_INTER_THREADS=1 \
-    DOC2AGENT_DEVICE_ID=0 \
-    RUST_LOG=doc2agent=info,tower_http=info
+ENV DOC2MSG_HOST=0.0.0.0 \
+    DOC2MSG_PORT=3000 \
+    DOC2MSG_REQUEST_TIMEOUT=60 \
+    DOC2MSG_MAX_BODY_SIZE=52428800 \
+    DOC2MSG_EXTRACTION_CONCURRENCY=16 \
+    DOC2MSG_OCR_CONCURRENCY=4 \
+    DOC2MSG_SESSION_POOL_SIZE=4 \
+    DOC2MSG_MAX_BATCH=32 \
+    DOC2MSG_INTRA_THREADS=1 \
+    DOC2MSG_INTER_THREADS=1 \
+    DOC2MSG_DEVICE_ID=0 \
+    RUST_LOG=doc2msg=info,tower_http=info
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD bash -ec 'curl -fsS "http://127.0.0.1:${DOC2AGENT_PORT:-3000}/health" >/dev/null'
+    CMD bash -ec 'curl -fsS "http://127.0.0.1:${DOC2MSG_PORT:-3000}/health" >/dev/null'
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["doc2agent"]
+CMD ["doc2msg"]
 

@@ -3,8 +3,8 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use doc2agent::config::RuntimeConfig;
-use doc2agent::server::{build_router, AppState};
+use doc2msg::config::RuntimeConfig;
+use doc2msg::server::{build_router, AppState};
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgb};
 use tower::ServiceExt;
 
@@ -543,14 +543,14 @@ async fn test_metrics_endpoint_exposes_prometheus_metrics() {
         .unwrap();
     let metrics = String::from_utf8(body.to_vec()).unwrap();
 
-    assert!(metrics.contains("# HELP doc2agent_requests_total"));
-    assert!(metrics.contains("doc2agent_requests_total{route=\"/health\",status=\"200\"} 1"));
-    assert!(metrics.contains("doc2agent_requests_total{route=\"/v1/ocr\",status=\"501\"} 1"));
-    assert!(metrics.contains("# TYPE doc2agent_request_duration_ms histogram"));
-    assert!(metrics.contains("doc2agent_request_duration_ms_count{route=\"/health\"} 1"));
-    assert!(metrics.contains("doc2agent_cache_hits_total{route=\"/v1/extract/bytes\"} 1"));
-    assert!(metrics.contains("doc2agent_cache_misses_total{route=\"/v1/extract/bytes\"} 1"));
-    assert!(metrics.contains("doc2agent_cache_hit_ratio{route=\"/v1/extract/bytes\"} 0.500000"));
-    assert!(metrics.contains("doc2agent_ocr_requests_total 1"));
-    assert!(metrics.contains("doc2agent_ocr_usage_total 0"));
+    assert!(metrics.contains("# HELP doc2msg_requests_total"));
+    assert!(metrics.contains("doc2msg_requests_total{route=\"/health\",status=\"200\"} 1"));
+    assert!(metrics.contains("doc2msg_requests_total{route=\"/v1/ocr\",status=\"501\"} 1"));
+    assert!(metrics.contains("# TYPE doc2msg_request_duration_ms histogram"));
+    assert!(metrics.contains("doc2msg_request_duration_ms_count{route=\"/health\"} 1"));
+    assert!(metrics.contains("doc2msg_cache_hits_total{route=\"/v1/extract/bytes\"} 1"));
+    assert!(metrics.contains("doc2msg_cache_misses_total{route=\"/v1/extract/bytes\"} 1"));
+    assert!(metrics.contains("doc2msg_cache_hit_ratio{route=\"/v1/extract/bytes\"} 0.500000"));
+    assert!(metrics.contains("doc2msg_ocr_requests_total 1"));
+    assert!(metrics.contains("doc2msg_ocr_usage_total 0"));
 }

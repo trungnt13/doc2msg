@@ -6,8 +6,8 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use doc2agent::config::RuntimeConfig;
-use doc2agent::server::{build_router, AppState};
+use doc2msg::config::RuntimeConfig;
+use doc2msg::server::{build_router, AppState};
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgb};
 
 /// Create a default RuntimeConfig for testing with OCR disabled and minimal resource usage.
@@ -81,21 +81,21 @@ pub fn resolve_existing_path(env_keys: &[&str], repo_relative: &str) -> Option<P
 /// Check whether all OCR assets (detector, recognizer, dictionary) are available locally.
 pub fn local_full_ocr_assets_available() -> bool {
     resolve_existing_path(
-        &["DOC2AGENT_DET_MODEL", "DOC2AGENT_TEST_DET_MODEL"],
+        &["DOC2MSG_DET_MODEL", "DOC2MSG_TEST_DET_MODEL"],
         "models/det_model.onnx",
     )
     .is_some()
         && resolve_existing_path(
             &[
-                "DOC2AGENT_MODEL_PATH",
-                "DOC2AGENT_REC_MODEL",
-                "DOC2AGENT_TEST_REC_MODEL",
+                "DOC2MSG_MODEL_PATH",
+                "DOC2MSG_REC_MODEL",
+                "DOC2MSG_TEST_REC_MODEL",
             ],
             "models/rec_model.onnx",
         )
         .is_some()
         && resolve_existing_path(
-            &["DOC2AGENT_DICT_PATH", "DOC2AGENT_TEST_REC_DICT"],
+            &["DOC2MSG_DICT_PATH", "DOC2MSG_TEST_REC_DICT"],
             "models/ppocr_keys_v1.txt",
         )
         .is_some()

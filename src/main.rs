@@ -3,16 +3,16 @@ use std::time::Duration;
 
 use clap::Parser;
 
-use doc2agent::config::RuntimeConfig;
-use doc2agent::server::{build_router, AppState};
-use doc2agent::CliArgs;
+use doc2msg::config::RuntimeConfig;
+use doc2msg::server::{build_router, AppState};
+use doc2msg::CliArgs;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "doc2agent=info,tower_http=info".into()),
+                .unwrap_or_else(|_| "doc2msg=info,tower_http=info".into()),
         )
         .init();
 
@@ -23,7 +23,7 @@ async fn main() -> anyhow::Result<()> {
     let app = build_router(Arc::clone(&state));
 
     let addr = format!("{}:{}", config.host, config.port);
-    tracing::info!(addr = %addr, "starting doc2agent server");
+    tracing::info!(addr = %addr, "starting doc2msg server");
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
     let shutdown_state = Arc::clone(&state);
@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
             let _ = shutdown_rx.await;
         })
         .await?;
-    tracing::info!("doc2agent server stopped");
+    tracing::info!("doc2msg server stopped");
     Ok(())
 }
 

@@ -1,12 +1,12 @@
 ---
 status: completed
-goal: Design the architecture and phased implementation roadmap for Doc2Agent, a Rust microservice converting documents to chunked Markdown for LLM agent CLIs.
-prompt: Research best practices and design doc2agent implementation plan covering web, PDF, OCR, and production hardening phases.
+goal: Design the architecture and phased implementation roadmap for Doc2Msg, a Rust microservice converting documents to chunked Markdown for LLM agent CLIs.
+prompt: Research best practices and design doc2msg implementation plan covering web, PDF, OCR, and production hardening phases.
 created: 2026-03-17T00:00:00Z
 finished: 2026-03-17T13:00:00Z
 ---
 
-# Doc2Agent: Ultra-Fast Document → Agent-Friendly Output
+# Doc2Msg: Ultra-Fast Document → Agent-Friendly Output
 
 ## Design Specification
 
@@ -36,7 +36,7 @@ No MCP needed — a standalone HTTP microservice that any CLI can `curl`.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        doc2agent service                            │
+│                        doc2msg service                            │
 │                                                                     │
 │  ┌─────────┐   ┌────────────┐   ┌──────────────┐   ┌────────────┐ │
 │  │ Ingress  │──▶│ Resolver / │──▶│  Extraction   │──▶│ Normalizer │ │
@@ -317,7 +317,7 @@ Response:
 ```json
 {
   "status": "ok",
-  "pipeline": "doc2agent",
+  "pipeline": "doc2msg",
   "gpu": true,
   "ocr_model": "openocr-repsvtr",
   "session_pool": 4
@@ -373,7 +373,7 @@ Events are emitted in order — the agent can start processing before the full d
 ## 6. Project Structure
 
 ```
-doc2agent/
+doc2msg/
 ├── Cargo.toml
 ├── Cargo.lock
 ├── run.sh                        # Example launch script
@@ -610,7 +610,7 @@ FROM nvidia/cuda:12.2-runtime-ubuntu22.04 AS runtime
 # Install ONNX Runtime with TensorRT
 # Copy binary + models
 # EXPOSE 8080
-# ENTRYPOINT ["./doc2agent"]
+# ENTRYPOINT ["./doc2msg"]
 ```
 
 ### Usage from Agent CLI

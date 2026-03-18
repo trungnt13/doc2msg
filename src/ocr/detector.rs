@@ -419,7 +419,7 @@ mod tests {
     }
 
     fn local_detector_model_path() -> Option<String> {
-        std::env::var("DOC2AGENT_DET_MODEL")
+        std::env::var("DOC2MSG_DET_MODEL")
             .ok()
             .filter(|value| Path::new(value).is_file())
             .or_else(|| {

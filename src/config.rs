@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn from_cli_uses_runtime_hardening_defaults() {
-        let args = CliArgs::parse_from(["doc2agent"]);
+        let args = CliArgs::parse_from(["doc2msg"]);
         let config = RuntimeConfig::from_cli(&args);
 
         assert_eq!(config.extraction_concurrency, 16);
@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn from_cli_normalizes_zero_limits() {
         let args = CliArgs::parse_from([
-            "doc2agent",
+            "doc2msg",
             "--extraction-concurrency",
             "0",
             "--ocr-concurrency",
@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn from_cli_sets_pdfium_runtime_config() {
         let args = CliArgs::parse_from([
-            "doc2agent",
+            "doc2msg",
             "--pdfium-enabled",
             "--pdfium-lib-path",
             "/opt/pdfium/libpdfium.so",

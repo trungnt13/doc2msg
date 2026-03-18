@@ -1,17 +1,17 @@
 # CPU-only Docker Compose for development and CI without GPU.
 # Usage: docker compose -f docker-compose.cpu.yml up --build
 services:
-  doc2agent:
+  doc2msg:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         CARGO_FEATURES: ""
-    image: doc2agent:cpu
+    image: doc2msg:cpu
     init: true
     restart: unless-stopped
     ports:
-      - "${DOC2AGENT_PUBLISHED_PORT:-8080}:3000"
+      - "${DOC2MSG_PUBLISHED_PORT:-8080}:3000"
     deploy:
       resources:
         limits:
@@ -26,18 +26,18 @@ services:
         max-size: "50m"
         max-file: "5"
     environment:
-      DOC2AGENT_HOST: 0.0.0.0
-      DOC2AGENT_PORT: 3000
-      DOC2AGENT_REQUEST_TIMEOUT: ${DOC2AGENT_REQUEST_TIMEOUT:-60}
-      DOC2AGENT_MAX_BODY_SIZE: ${DOC2AGENT_MAX_BODY_SIZE:-52428800}
-      DOC2AGENT_EXTRACTION_CONCURRENCY: ${DOC2AGENT_EXTRACTION_CONCURRENCY:-8}
-      DOC2AGENT_OCR_CONCURRENCY: ${DOC2AGENT_OCR_CONCURRENCY:-1}
-      DOC2AGENT_SESSION_POOL_SIZE: ${DOC2AGENT_SESSION_POOL_SIZE:-1}
-      DOC2AGENT_MAX_BATCH: ${DOC2AGENT_MAX_BATCH:-8}
-      DOC2AGENT_INTRA_THREADS: ${DOC2AGENT_INTRA_THREADS:-0}
-      DOC2AGENT_INTER_THREADS: ${DOC2AGENT_INTER_THREADS:-0}
-      DOC2AGENT_DEVICE_ID: -1
-      DOC2AGENT_PDFIUM_ENABLED: ${DOC2AGENT_PDFIUM_ENABLED:-false}
-      RUST_LOG: ${RUST_LOG:-doc2agent=info,tower_http=info}
+      DOC2MSG_HOST: 0.0.0.0
+      DOC2MSG_PORT: 3000
+      DOC2MSG_REQUEST_TIMEOUT: ${DOC2MSG_REQUEST_TIMEOUT:-60}
+      DOC2MSG_MAX_BODY_SIZE: ${DOC2MSG_MAX_BODY_SIZE:-52428800}
+      DOC2MSG_EXTRACTION_CONCURRENCY: ${DOC2MSG_EXTRACTION_CONCURRENCY:-8}
+      DOC2MSG_OCR_CONCURRENCY: ${DOC2MSG_OCR_CONCURRENCY:-1}
+      DOC2MSG_SESSION_POOL_SIZE: ${DOC2MSG_SESSION_POOL_SIZE:-1}
+      DOC2MSG_MAX_BATCH: ${DOC2MSG_MAX_BATCH:-8}
+      DOC2MSG_INTRA_THREADS: ${DOC2MSG_INTRA_THREADS:-0}
+      DOC2MSG_INTER_THREADS: ${DOC2MSG_INTER_THREADS:-0}
+      DOC2MSG_DEVICE_ID: -1
+      DOC2MSG_PDFIUM_ENABLED: ${DOC2MSG_PDFIUM_ENABLED:-false}
+      RUST_LOG: ${RUST_LOG:-doc2msg=info,tower_http=info}
     volumes:
       - ./models:/models:ro

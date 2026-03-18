@@ -123,17 +123,17 @@ impl MetricsCollector {
         let mut output = String::new();
 
         output
-            .push_str("# HELP doc2agent_requests_total Total HTTP requests by route and status.\n");
-        output.push_str("# TYPE doc2agent_requests_total counter\n");
+            .push_str("# HELP doc2msg_requests_total Total HTTP requests by route and status.\n");
+        output.push_str("# TYPE doc2msg_requests_total counter\n");
         for ((route, status), count) in &inner.requests_total {
             let _ = writeln!(
                 output,
-                "doc2agent_requests_total{{route=\"{route}\",status=\"{status}\"}} {count}"
+                "doc2msg_requests_total{{route=\"{route}\",status=\"{status}\"}} {count}"
             );
         }
 
-        output.push_str("# HELP doc2agent_request_duration_ms Request latency in milliseconds.\n");
-        output.push_str("# TYPE doc2agent_request_duration_ms histogram\n");
+        output.push_str("# HELP doc2msg_request_duration_ms Request latency in milliseconds.\n");
+        output.push_str("# TYPE doc2msg_request_duration_ms histogram\n");
         for route in KNOWN_ROUTES {
             let stats = inner
                 .request_latency
@@ -146,63 +146,63 @@ impl MetricsCollector {
                 cumulative = cumulative.saturating_add(stats.bucket_counts[index]);
                 let _ = writeln!(
                     output,
-                    "doc2agent_request_duration_ms_bucket{{route=\"{route}\",le=\"{bucket}\"}} {cumulative}"
+                    "doc2msg_request_duration_ms_bucket{{route=\"{route}\",le=\"{bucket}\"}} {cumulative}"
                 );
             }
 
             cumulative = cumulative.saturating_add(stats.bucket_counts[LATENCY_BUCKETS_MS.len()]);
             let _ = writeln!(
                 output,
-                "doc2agent_request_duration_ms_bucket{{route=\"{route}\",le=\"+Inf\"}} {cumulative}"
+                "doc2msg_request_duration_ms_bucket{{route=\"{route}\",le=\"+Inf\"}} {cumulative}"
             );
             let _ = writeln!(
                 output,
-                "doc2agent_request_duration_ms_sum{{route=\"{route}\"}} {}",
+                "doc2msg_request_duration_ms_sum{{route=\"{route}\"}} {}",
                 stats.sum_ms
             );
             let _ = writeln!(
                 output,
-                "doc2agent_request_duration_ms_count{{route=\"{route}\"}} {}",
+                "doc2msg_request_duration_ms_count{{route=\"{route}\"}} {}",
                 stats.count
             );
         }
 
-        output.push_str("# HELP doc2agent_ocr_requests_total Total OCR endpoint requests.\n");
-        output.push_str("# TYPE doc2agent_ocr_requests_total counter\n");
+        output.push_str("# HELP doc2msg_ocr_requests_total Total OCR endpoint requests.\n");
+        output.push_str("# TYPE doc2msg_ocr_requests_total counter\n");
         let _ = writeln!(
             output,
-            "doc2agent_ocr_requests_total {}",
+            "doc2msg_ocr_requests_total {}",
             inner.ocr_requests
         );
 
         output.push_str(
-            "# HELP doc2agent_ocr_usage_total Total extraction operations that used OCR.\n",
+            "# HELP doc2msg_ocr_usage_total Total extraction operations that used OCR.\n",
         );
-        output.push_str("# TYPE doc2agent_ocr_usage_total counter\n");
-        let _ = writeln!(output, "doc2agent_ocr_usage_total {}", inner.ocr_usage);
+        output.push_str("# TYPE doc2msg_ocr_usage_total counter\n");
+        let _ = writeln!(output, "doc2msg_ocr_usage_total {}", inner.ocr_usage);
 
-        output.push_str("# HELP doc2agent_cache_hits_total Total cache hits by route.\n");
-        output.push_str("# TYPE doc2agent_cache_hits_total counter\n");
+        output.push_str("# HELP doc2msg_cache_hits_total Total cache hits by route.\n");
+        output.push_str("# TYPE doc2msg_cache_hits_total counter\n");
         for route in CACHE_ROUTES {
             let count = inner.cache_hits.get(route).copied().unwrap_or(0);
             let _ = writeln!(
                 output,
-                "doc2agent_cache_hits_total{{route=\"{route}\"}} {count}"
+                "doc2msg_cache_hits_total{{route=\"{route}\"}} {count}"
             );
         }
 
-        output.push_str("# HELP doc2agent_cache_misses_total Total cache misses by route.\n");
-        output.push_str("# TYPE doc2agent_cache_misses_total counter\n");
+        output.push_str("# HELP doc2msg_cache_misses_total Total cache misses by route.\n");
+        output.push_str("# TYPE doc2msg_cache_misses_total counter\n");
         for route in CACHE_ROUTES {
             let count = inner.cache_misses.get(route).copied().unwrap_or(0);
             let _ = writeln!(
                 output,
-                "doc2agent_cache_misses_total{{route=\"{route}\"}} {count}"
+                "doc2msg_cache_misses_total{{route=\"{route}\"}} {count}"
             );
         }
 
-        output.push_str("# HELP doc2agent_cache_hit_ratio Cache hit ratio by route.\n");
-        output.push_str("# TYPE doc2agent_cache_hit_ratio gauge\n");
+        output.push_str("# HELP doc2msg_cache_hit_ratio Cache hit ratio by route.\n");
+        output.push_str("# TYPE doc2msg_cache_hit_ratio gauge\n");
         for route in CACHE_ROUTES {
             let hits = inner.cache_hits.get(route).copied().unwrap_or(0);
             let misses = inner.cache_misses.get(route).copied().unwrap_or(0);
@@ -215,7 +215,7 @@ impl MetricsCollector {
 
             let _ = writeln!(
                 output,
-                "doc2agent_cache_hit_ratio{{route=\"{route}\"}} {ratio:.6}"
+                "doc2msg_cache_hit_ratio{{route=\"{route}\"}} {ratio:.6}"
             );
         }
 

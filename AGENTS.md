@@ -1,4 +1,4 @@
-# AGENTS.md — Doc2Agent
+# AGENTS.md — Doc2Msg
 
 Rust microservice that converts documents (web pages, PDFs, Markdown, images) into chunked Markdown streamed as NDJSON. Serves LLM agent CLIs (Codex, Copilot, Claude Code).
 
@@ -47,7 +47,7 @@ cargo build --release --features tensorrt-ep  # GPU build (TensorRT)
 | Path | Purpose |
 |------|---------|
 | `src/main.rs` | CLI args (clap derive), server bootstrap, graceful shutdown |
-| `src/config.rs` | `RuntimeConfig` — 16 fields, all with `DOC2AGENT_*` env var overrides |
+| `src/config.rs` | `RuntimeConfig` — 16 fields, all with `DOC2MSG_*` env var overrides |
 | `src/server.rs` | Axum router, middleware stack (timeout, body limit, tracing, gzip), `AppState` |
 | `src/resolver.rs` | URL fetch, MIME sniffing, `SourceDescriptor` + `SourceKind` classification |
 | `src/pipeline/mod.rs` | `dispatch()` — routes `SourceKind` to the matching pipeline's `extract()` method |

@@ -1,4 +1,4 @@
-Doc2Agent OCR benchmark results
+Doc2Msg OCR benchmark results
 Generated: 2026-03-18T00:15:26.590097+00:00
 Runtime: cuda-ep
 Cargo features: cuda-ep

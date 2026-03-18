@@ -19,12 +19,12 @@ IMAGE_WIDTH="${IMAGE_WIDTH:-320}"
 IMAGE_HEIGHT="${IMAGE_HEIGHT:-48}"
 MODEL_PATH="${MODEL_PATH:-$ROOT_DIR/models/rec_model.onnx}"
 DICT_PATH="${DICT_PATH:-$ROOT_DIR/models/ppocr_keys_v1.txt}"
-SERVER_BIN="${SERVER_BIN:-$ROOT_DIR/target/release/doc2agent}"
+SERVER_BIN="${SERVER_BIN:-$ROOT_DIR/target/release/doc2msg}"
 BENCH_BIN="${BENCH_BIN:-$ROOT_DIR/target/release/ocr_benchmark}"
 OUTPUT_JSON="${OUTPUT_JSON:-$ROOT_DIR/tests/benchmarks/ocr_benchmark_results.json}"
 OUTPUT_TXT="${OUTPUT_TXT:-$ROOT_DIR/tests/benchmarks/ocr_benchmark_results.txt}"
 SERVER_LOG="${SERVER_LOG:-$ROOT_DIR/tests/benchmarks/ocr_benchmark_server.log}"
-RUST_LOG="${RUST_LOG:-doc2agent=warn}"
+RUST_LOG="${RUST_LOG:-doc2msg=warn}"
 
 if [[ ! -f "$MODEL_PATH" ]]; then
   echo "missing OCR model at $MODEL_PATH" >&2
@@ -60,7 +60,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-build_args=(build --release --bin doc2agent --bin ocr_benchmark)
+build_args=(build --release --bin doc2msg --bin ocr_benchmark)
 if [[ -n "$CARGO_FEATURES" ]]; then
   build_args+=(--features "$CARGO_FEATURES")
 fi
@@ -280,7 +280,7 @@ payload = {
 output_json.write_text(json.dumps(payload, indent=2) + "\n")
 
 lines = []
-lines.append("Doc2Agent OCR benchmark results")
+lines.append("Doc2Msg OCR benchmark results")
 lines.append(f"Generated: {metadata['generated_at']}")
 lines.append(f"Runtime: {runtime_label}")
 lines.append(f"Cargo features: {cargo_features or '(none)'}")

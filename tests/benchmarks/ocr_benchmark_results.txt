@@ -1,4 +1,4 @@
-Doc2Agent OCR GPU validation (remote host: tn)
+Doc2Msg OCR GPU validation (remote host: tn)
 Generated: 2026-03-18T00:16:52.628060+00:00
 GPU: NVIDIA GeForce RTX 3090, 580.126.20, 24576 MiB
 Status: GPU execution verified for both CUDA EP and TensorRT EP.

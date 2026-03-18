@@ -7,11 +7,11 @@ use anyhow::Context;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use bytes::Bytes;
-use doc2agent::config::RuntimeConfig;
-use doc2agent::pdfium;
-use doc2agent::pipeline::pdf::PdfPipeline;
-use doc2agent::resolver::{SourceDescriptor, SourceKind};
-use doc2agent::server::{build_router, AppState};
+use doc2msg::config::RuntimeConfig;
+use doc2msg::pdfium;
+use doc2msg::pipeline::pdf::PdfPipeline;
+use doc2msg::resolver::{SourceDescriptor, SourceKind};
+use doc2msg::server::{build_router, AppState};
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgb};
 use tower::ServiceExt;
 
@@ -53,21 +53,21 @@ async fn parse_ndjson(response: axum::http::Response<Body>) -> Vec<serde_json::V
 
 fn local_full_ocr_assets_available() -> bool {
     resolve_existing_path(
-        &["DOC2AGENT_DET_MODEL", "DOC2AGENT_TEST_DET_MODEL"],
+        &["DOC2MSG_DET_MODEL", "DOC2MSG_TEST_DET_MODEL"],
         "models/det_model.onnx",
     )
     .is_some()
         && resolve_existing_path(
             &[
-                "DOC2AGENT_MODEL_PATH",
-                "DOC2AGENT_REC_MODEL",
-                "DOC2AGENT_TEST_REC_MODEL",
+                "DOC2MSG_MODEL_PATH",
+                "DOC2MSG_REC_MODEL",
+                "DOC2MSG_TEST_REC_MODEL",
             ],
             "models/rec_model.onnx",
         )
         .is_some()
         && resolve_existing_path(
-            &["DOC2AGENT_DICT_PATH", "DOC2AGENT_TEST_REC_DICT"],
+            &["DOC2MSG_DICT_PATH", "DOC2MSG_TEST_REC_DICT"],
             "models/ppocr_keys_v1.txt",
         )
         .is_some()
@@ -75,7 +75,7 @@ fn local_full_ocr_assets_available() -> bool {
 
 fn local_pdfium_available() -> anyhow::Result<()> {
     pdfium::ensure_available().with_context(|| {
-        "pdfium is unavailable for tests; set DOC2AGENT_PDFIUM_ENABLED=1 and optionally DOC2AGENT_PDFIUM_LIB_PATH=/path/to/libpdfium"
+        "pdfium is unavailable for tests; set DOC2MSG_PDFIUM_ENABLED=1 and optionally DOC2MSG_PDFIUM_LIB_PATH=/path/to/libpdfium"
     })
 }
 
@@ -288,7 +288,7 @@ async fn poor_quality_pdf_routes_to_best_available_ocr_fallback_when_assets_are_
 ) -> anyhow::Result<()> {
     if !local_full_ocr_assets_available() {
         eprintln!(
-            "skipping PDF OCR fallback integration test; provide detector, recognizer, and dictionary assets in models/ or via DOC2AGENT_* env vars"
+            "skipping PDF OCR fallback integration test; provide detector, recognizer, and dictionary assets in models/ or via DOC2MSG_* env vars"
         );
         return Ok(());
     }
@@ -399,7 +399,7 @@ async fn pdfium_page_ocr_runs_when_pdfium_and_models_are_available() -> anyhow::
     }
     if !local_full_ocr_assets_available() {
         eprintln!(
-            "skipping pdfium page OCR test; provide detector, recognizer, and dictionary assets in models/ or via DOC2AGENT_* env vars"
+            "skipping pdfium page OCR test; provide detector, recognizer, and dictionary assets in models/ or via DOC2MSG_* env vars"
         );
         return Ok(());
     }

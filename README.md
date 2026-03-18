@@ -1,4 +1,4 @@
-# Doc2Agent
+# Doc2Msg
 
 Ultra-fast document → agent-friendly output. A Rust microservice that converts any document (web pages, PDFs, Markdown, images) into clean, chunked text streams optimized for consumption by LLM agent CLIs (Codex CLI, Copilot CLI, Claude Code).
 
@@ -16,8 +16,8 @@ cargo build --release --features tensorrt-ep
 cargo run --release -- --host 0.0.0.0 --port 8080
 
 # Optional: enable pdfium-backed PDF text extraction / rendering helpers
-DOC2AGENT_PDFIUM_ENABLED=1 \
-DOC2AGENT_PDFIUM_LIB_PATH=/path/to/libpdfium.so \
+DOC2MSG_PDFIUM_ENABLED=1 \
+DOC2MSG_PDFIUM_LIB_PATH=/path/to/libpdfium.so \
 cargo run --release -- --host 0.0.0.0 --port 8080
 
 # Optional: point ONNX Runtime provider libraries at a non-standard cache dir
@@ -60,12 +60,12 @@ Deployment notes:
 - The container builds with `cuda-ep` by default on
   `nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04`.
 - Models are mounted read-only at `/models`; the container entrypoint maps them
-  to `DOC2AGENT_DET_MODEL`, `DOC2AGENT_MODEL_PATH`, and `DOC2AGENT_DICT_PATH`.
-- Override the published port with `DOC2AGENT_PUBLISHED_PORT=3000`.
-- Override build features with `DOC2AGENT_BUILD_FEATURES=cuda-ep`.
-- To force CPU fallback inside the same image, set `DOC2AGENT_DEVICE_ID=-1`.
+  to `DOC2MSG_DET_MODEL`, `DOC2MSG_MODEL_PATH`, and `DOC2MSG_DICT_PATH`.
+- Override the published port with `DOC2MSG_PUBLISHED_PORT=3000`.
+- Override build features with `DOC2MSG_BUILD_FEATURES=cuda-ep`.
+- To force CPU fallback inside the same image, set `DOC2MSG_DEVICE_ID=-1`.
 - To enable pdfium, mount `libpdfium.so` into `/opt/pdfium/` and set
-  `DOC2AGENT_PDFIUM_ENABLED=true`.
+  `DOC2MSG_PDFIUM_ENABLED=true`.
 
 ## Usage
 
@@ -106,7 +106,7 @@ DEVICE_ID=0 \
 tests/benchmarks/run_ocr_benchmark.sh
 ```
 
-The benchmark harness builds `doc2agent` plus `ocr_benchmark`, exercises `/v1/ocr`
+The benchmark harness builds `doc2msg` plus `ocr_benchmark`, exercises `/v1/ocr`
 across session pool sizes `2,4,8` and batch sizes `1,4,8,16,32`, then writes:
 
 - `tests/benchmarks/ocr_benchmark_results.json`
@@ -127,8 +127,8 @@ See [ai-docs/design-spec-document-conversion-service.md](ai-docs/design-spec-doc
 
 Phase 4 pdfium support is loaded dynamically at runtime; no binaries are bundled in this repository.
 
-- Set `DOC2AGENT_PDFIUM_ENABLED=1` to allow binding to a system-installed pdfium library.
-- Set `DOC2AGENT_PDFIUM_LIB_PATH` to either the `libpdfium` shared library itself or the directory containing it.
+- Set `DOC2MSG_PDFIUM_ENABLED=1` to allow binding to a system-installed pdfium library.
+- Set `DOC2MSG_PDFIUM_LIB_PATH` to either the `libpdfium` shared library itself or the directory containing it.
 - Pdfium-specific tests in `tests/test_pdf.rs` automatically skip when no runtime binding is available.
 
 ## License

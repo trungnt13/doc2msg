@@ -1,16 +1,16 @@
 ---
 status: completed
-goal: Implement Doc2Agent through Phases 1-5 and validate the full system locally and on the remote RTX 3090 server.
+goal: Implement Doc2Msg through Phases 1-5 and validate the full system locally and on the remote RTX 3090 server.
 prompt: Implement all the remaining phases in the plan, keep iterate until all Phase/Tasks finished.
 created: 2026-03-17T21:51:31.403Z
 finished: 2026-03-18T05:32:54.657Z
 ---
 
-# Doc2Agent Executed Plan
+# Doc2Msg Executed Plan
 
 ## Summary
 
-This document records the **executed implementation plan** for `doc2agent`, including what was built, how the work was staged, what was deployed remotely, and the resulting runtime/benchmark evidence.
+This document records the **executed implementation plan** for `doc2msg`, including what was built, how the work was staged, what was deployed remotely, and the resulting runtime/benchmark evidence.
 
 It complements:
 

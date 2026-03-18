@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
     about = "Benchmark the /v1/ocr endpoint with synthetic image payloads"
 )]
 struct Args {
-    /// Base URL for the Doc2Agent server.
+    /// Base URL for the Doc2Msg server.
     #[arg(long, default_value = "http://127.0.0.1:3000")]
     base_url: String,
 

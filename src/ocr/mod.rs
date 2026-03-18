@@ -66,11 +66,11 @@ impl DocumentOcr {
         let recognizer = Recognizer::new(
             &paths.recognizer_model.to_string_lossy(),
             &paths.dictionary.to_string_lossy(),
-            env_usize("DOC2AGENT_SESSION_POOL_SIZE", DEFAULT_SESSION_POOL_SIZE),
-            env_usize("DOC2AGENT_MAX_BATCH", DEFAULT_MAX_BATCH),
-            env_usize("DOC2AGENT_INTRA_THREADS", DEFAULT_INTRA_THREADS),
-            env_usize("DOC2AGENT_INTER_THREADS", DEFAULT_INTER_THREADS),
-            env_i32("DOC2AGENT_DEVICE_ID", DEFAULT_DEVICE_ID),
+            env_usize("DOC2MSG_SESSION_POOL_SIZE", DEFAULT_SESSION_POOL_SIZE),
+            env_usize("DOC2MSG_MAX_BATCH", DEFAULT_MAX_BATCH),
+            env_usize("DOC2MSG_INTRA_THREADS", DEFAULT_INTRA_THREADS),
+            env_usize("DOC2MSG_INTER_THREADS", DEFAULT_INTER_THREADS),
+            env_i32("DOC2MSG_DEVICE_ID", DEFAULT_DEVICE_ID),
         )
         .context("failed to initialize full OCR recognizer")?;
 
@@ -156,38 +156,38 @@ struct OcrModelPaths {
 impl OcrModelPaths {
     fn from_environment() -> anyhow::Result<Self> {
         let detector_model = resolve_model_path(
-            &["DOC2AGENT_DET_MODEL", "DOC2AGENT_TEST_DET_MODEL"],
+            &["DOC2MSG_DET_MODEL", "DOC2MSG_TEST_DET_MODEL"],
             DEFAULT_DETECTOR_MODEL,
         );
         let recognizer_model = resolve_model_path(
             &[
-                "DOC2AGENT_MODEL_PATH",
-                "DOC2AGENT_REC_MODEL",
-                "DOC2AGENT_TEST_REC_MODEL",
+                "DOC2MSG_MODEL_PATH",
+                "DOC2MSG_REC_MODEL",
+                "DOC2MSG_TEST_REC_MODEL",
             ],
             DEFAULT_RECOGNIZER_MODEL,
         );
         let dictionary = resolve_model_path(
-            &["DOC2AGENT_DICT_PATH", "DOC2AGENT_TEST_REC_DICT"],
+            &["DOC2MSG_DICT_PATH", "DOC2MSG_TEST_REC_DICT"],
             DEFAULT_DICTIONARY,
         );
 
         let mut missing = Vec::new();
         if detector_model.is_none() {
             missing.push(format!(
-                "detector model not found (set DOC2AGENT_DET_MODEL or add {})",
+                "detector model not found (set DOC2MSG_DET_MODEL or add {})",
                 DEFAULT_DETECTOR_MODEL
             ));
         }
         if recognizer_model.is_none() {
             missing.push(format!(
-                "recognizer model not found (set DOC2AGENT_MODEL_PATH or add {})",
+                "recognizer model not found (set DOC2MSG_MODEL_PATH or add {})",
                 DEFAULT_RECOGNIZER_MODEL
             ));
         }
         if dictionary.is_none() {
             missing.push(format!(
-                "recognizer dictionary not found (set DOC2AGENT_DICT_PATH or add {})",
+                "recognizer dictionary not found (set DOC2MSG_DICT_PATH or add {})",
                 DEFAULT_DICTIONARY
             ));
         }

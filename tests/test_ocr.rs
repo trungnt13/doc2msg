@@ -5,16 +5,16 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use doc2agent::config::RuntimeConfig;
-use doc2agent::server::{build_router, AppState};
+use doc2msg::config::RuntimeConfig;
+use doc2msg::server::{build_router, AppState};
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgb};
 use tower::ServiceExt;
 
 fn local_model_paths() -> Option<(PathBuf, PathBuf)> {
-    let model_path = env::var_os("DOC2AGENT_TEST_REC_MODEL")
+    let model_path = env::var_os("DOC2MSG_TEST_REC_MODEL")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("models/rec_model.onnx"));
-    let dict_path = env::var_os("DOC2AGENT_TEST_REC_DICT")
+    let dict_path = env::var_os("DOC2MSG_TEST_REC_DICT")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("models/ppocr_keys_v1.txt"));
 
@@ -59,7 +59,7 @@ fn encode_png_base64(color: [u8; 3]) -> String {
 async fn ocr_endpoint_runs_when_local_models_are_available() {
     let Some((model_path, dict_path)) = local_model_paths() else {
         eprintln!(
-            "skipping OCR endpoint integration test; provide local model assets at models/ or via DOC2AGENT_TEST_REC_MODEL and DOC2AGENT_TEST_REC_DICT"
+            "skipping OCR endpoint integration test; provide local model assets at models/ or via DOC2MSG_TEST_REC_MODEL and DOC2MSG_TEST_REC_DICT"
         );
         return;
     };
