@@ -119,7 +119,7 @@ if your ONNX Runtime GPU artifacts live elsewhere.
 
 ## Architecture
 
-See [ai-docs/design-spec.md](ai-docs/design-spec.md) for the design specification and [ai-docs/execution-record.md](ai-docs/execution-record.md) for the execution record.
+See [ai-docs/doc2agent-design-spec.md](ai-docs/doc2agent-design-spec.md) for the design specification and [ai-docs/doc2agent-execution-record.md](ai-docs/doc2agent-execution-record.md) for the execution record.
 
 **Design principle: Progressive Escalation** — fetch → classify → cheap extraction → quality check → rich render/OCR only if needed → normalize → chunk → stream.
 

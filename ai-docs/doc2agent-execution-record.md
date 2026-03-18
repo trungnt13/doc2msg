@@ -14,7 +14,7 @@ This document records the **executed implementation plan** for `doc2agent`, incl
 
 It complements:
 
-- `ai-docs/design-spec.md` — original target architecture and phase plan
+- `ai-docs/doc2agent-design-spec.md` — original target architecture and phase plan
 
 Status at the end of execution:
 
@@ -518,7 +518,7 @@ Deployment assets were validated for coherence and shell syntax, but not fully c
 
 ## Deviations from Design Spec
 
-The following items from `ai-docs/design-spec.md` were **not implemented** or were **changed** during execution:
+The following items from `ai-docs/doc2agent-design-spec.md` were **not implemented** or were **changed** during execution:
 
 | Design Item | Status | Notes |
 |-------------|--------|-------|
