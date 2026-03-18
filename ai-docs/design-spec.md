@@ -1,6 +1,14 @@
+---
+status: completed
+goal: Design the architecture and phased implementation roadmap for Doc2Agent, a Rust microservice converting documents to chunked Markdown for LLM agent CLIs.
+prompt: Research best practices and design doc2agent implementation plan covering web, PDF, OCR, and production hardening phases.
+created: 2026-03-17T00:00:00Z
+finished: 2026-03-17T13:00:00Z
+---
+
 # Doc2Agent: Ultra-Fast Document → Agent-Friendly Output
 
-## Implementation Plan
+## Design Specification
 
 > A Rust microservice that converts any document (web pages, PDFs, Markdown, images) into
 > clean, chunked text streams optimized for consumption by LLM agent CLIs

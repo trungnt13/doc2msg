@@ -55,6 +55,44 @@ When writing or updating docs, **explain why, not just what**. Why: "what" becom
 - Delete documentation that restates what the code already says.
 - Update docs in the same commit as the code change they describe.
 
+### 4. Archive plans and records in `ai-docs/`
+
+All design plans and execution records live in `ai-docs/`. Why: the live session plan is ephemeral, while future agents need durable records of what was designed, actually built, and deferred.
+
+**Two document types:**
+
+| Type | Naming | Purpose |
+|------|--------|---------|
+| Design spec | `<project>-design-spec.md` | Architecture, API design, phase roadmap — the *intent* |
+| Execution record | `<project>-execution-record.md` | What was built, validated, deferred — the *outcome* |
+
+- Create the design spec when starting a multi-phase effort.
+- Create the execution record before closing the task if the work spanned multiple phases, deployments, or benchmarks.
+- The execution record must include a **Deviations from Design Spec** section listing anything designed but not implemented, changed, or deferred.
+
+**Every document in `ai-docs/` must begin with YAML frontmatter:**
+
+```md
+---
+status: completed          # completed | in-progress | abandoned
+goal: <high-level goal>
+prompt: <user request or concise paraphrase that kicked off the work>
+created: <ISO-8601 timestamp>
+finished: <ISO-8601 timestamp or empty if in-progress>
+---
+```
+
+**Execution record body** should capture:
+
+- phase-by-phase execution summary
+- key code paths/files changed
+- deployment and validation details
+- benchmark/runtime evidence
+- deviations from design spec
+- caveats, blockers, or environment-specific notes
+
+If there is an active session `plan.md`, keep it current during execution and then publish the durable archive to `ai-docs/` when the effort is complete.
+
 ---
 
 ## Commands
@@ -155,13 +193,13 @@ Responses stream as NDJSON — chunks emitted as soon as each section is ready, 
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| 1 — Web + Fast PDF | axum server, reqwest fetcher, readability + html2md, pdf-extract, chunker, NDJSON streaming | Up next |
-| 2 — GPU OCR Engine | ort/ONNX Runtime, RepSVTR recognizer, session pool, SIMD preprocessing | Stubs |
-| 3 — Full OCR Pipeline | RepViT DB detection + recognition, end-to-end image → text | Stubs |
-| 4 — Rich PDF Fallback | pdfium-render, bitmap reuse, quality-based escalation to OCR | Stubs |
-| 5 — Production Hardening | Content-addressed cache, Prometheus metrics, Docker, load testing | Stubs |
+| 1 — Web + Fast PDF | axum server, reqwest fetcher, readability + html2md, pdf-extract, chunker, NDJSON streaming | Complete |
+| 2 — GPU OCR Engine | ort/ONNX Runtime, RepSVTR recognizer, session pool, SIMD preprocessing | Complete |
+| 3 — Full OCR Pipeline | RepViT DB detection + recognition, end-to-end image → text | Complete |
+| 4 — Rich PDF Fallback | pdfium-render, bitmap reuse, quality-based escalation to OCR | Complete |
+| 5 — Production Hardening | Content-addressed cache, Prometheus metrics, Docker, load testing | Complete |
 
-Implement phases sequentially. Full design: [`ai-docs/doc2agent-implementation-plan.md`](ai-docs/doc2agent-implementation-plan.md)
+Implement phases sequentially. Design: [`ai-docs/design-spec.md`](ai-docs/design-spec.md) · Execution record: [`ai-docs/execution-record.md`](ai-docs/execution-record.md)
 
 ---
 
