@@ -1,0 +1,13 @@
+Doc2Agent OCR benchmark results
+Generated: 2026-03-18T00:15:26.590097+00:00
+Runtime: cuda-ep
+Cargo features: cuda-ep
+Device ID: 0
+Benchmark target: http://127.0.0.1:38080/v1/ocr
+GPU: NVIDIA GeForce RTX 3090, 580.126.20, 24576 MiB
+ORT runtime libs: /home/trungnt13/.cache/ort.pyke.io/dfbin/x86_64-unknown-linux-gnu/8BBB8416566A668A240B72A56DBBB82F99F430AF86F64D776D7EBF53E144EFC9/onnxruntime/lib
+Workload: 40 timed requests/worker, 5 warmups, synthetic 320x48 PNG crops
+
+pool  batch  conc  reqs  images  obs_mean_ms  obs_p95_ms  srv_mean_ms  imgs_per_s  gpu
+----  -----  ----  ----  ------  -----------  ----------  -----------  ----------  ---
+   4     32     4   160    5120        42.74       51.47        41.88     2952.17  yes

@@ -1,0 +1,42 @@
+Doc2Agent OCR GPU validation (remote host: tn)
+Generated: 2026-03-18T00:16:52.628060+00:00
+GPU: NVIDIA GeForce RTX 3090, 580.126.20, 24576 MiB
+Status: GPU execution verified for both CUDA EP and TensorRT EP.
+ORT runtime libs: /home/trungnt13/.cache/ort.pyke.io/dfbin/x86_64-unknown-linux-gnu/8BBB8416566A668A240B72A56DBBB82F99F430AF86F64D776D7EBF53E144EFC9/onnxruntime/lib
+TensorRT runtime libraries visible via ldconfig:
+- libnvinfer.so.10 => /lib/x86_64-linux-gnu/libnvinfer.so.10
+- libnvinfer_plugin.so.10 => /lib/x86_64-linux-gnu/libnvinfer_plugin.so.10
+- libnvonnxparser.so.10 => /lib/x86_64-linux-gnu/libnvonnxparser.so.10
+Sampling note:
+- Earlier gpu=no rows came from an incomplete nvidia-smi sampling heuristic; authoritative GPU validation is now based on execution-provider registration, TensorRT whole-graph assignment / Cuda BFCArena log lines, and focused reruns with gpu_process_detected=true.
+Runtime fix:
+- Prepended the ONNX Runtime provider directory to LD_LIBRARY_PATH so libonnxruntime_providers_shared.so resolves before CUDA/TensorRT EP registration.
+
+CUDA evidence
+-------------
+- 2026-03-18T00:15:22.220031Z  INFO ort::execution_providers: Successfully registered `CUDAExecutionProvider` source=session options
+- 2026-03-18T00:15:22.272601Z  WARN ort::logging: Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.
+- 2026-03-18T00:15:22.312573Z  INFO ort::execution_providers: Successfully registered `CUDAExecutionProvider` source=session options
+- 2026-03-18T00:15:22.340694Z  WARN ort::logging: Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.
+- nvidia-smi peak memory: 1438 MiB
+- Focused benchmark: pool=4 batch=32 conc=4 total_images=5120 obs_mean_ms=42.74 imgs_per_s=2952.17 gpu=yes
+
+TensorRT evidence
+-----------------
+- 2026-03-18T00:13:52.670045Z  INFO ort::execution_providers: Successfully registered `TensorrtExecutionProvider` source=session options
+- 2026-03-18T00:13:53.098168Z  INFO ort::logging: [TensorRT EP] Whole graph will run on TensorRT execution provider
+- 2026-03-18T00:13:53.132295Z  INFO ort::execution_providers: Successfully registered `TensorrtExecutionProvider` source=session options
+- 2026-03-18T00:13:53.205585Z  INFO ort::logging: [TensorRT EP] Whole graph will run on TensorRT execution provider
+- 2026-03-18T00:13:52.811988Z  INFO ort::logging: Creating BFCArena for Cuda with following configs: initial_chunk_size_bytes: 1048576 ...
+- 2026-03-18T00:14:14.796234Z  INFO ort::logging: Extending BFCArena for Cuda. bin_num:17 (requested) num_bytes: 33920000 (actual) rounded_bytes:33920000
+- nvidia-smi peak memory: 1336 MiB
+- Focused benchmark: pool=4 batch=32 conc=4 total_images=5120 obs_mean_ms=35.55 imgs_per_s=3566.95 gpu=yes
+
+Detailed raw artifacts
+----------------------
+- tests/benchmarks/ocr_benchmark_cuda_results.json
+- tests/benchmarks/ocr_benchmark_cuda_results.txt
+- tests/benchmarks/ocr_benchmark_cuda_server.log
+- tests/benchmarks/ocr_benchmark_trt_results.json
+- tests/benchmarks/ocr_benchmark_trt_results.txt
+- tests/benchmarks/ocr_benchmark_trt_server.log

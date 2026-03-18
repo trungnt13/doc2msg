@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "generated_at": "2026-03-18T00:15:10.579286+00:00",
+    "host": "127.0.0.1",
+    "port": 38080,
+    "runtime_label": "tensorrt-ep",
+    "cargo_features": "tensorrt-ep",
+    "device_id": 0,
+    "requests_per_worker": 40,
+    "warmup_requests": 10,
+    "image_width": 320,
+    "image_height": 48,
+    "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39",
+    "gpu": "NVIDIA GeForce RTX 3090, 580.126.20, 24576 MiB",
+    "ort_lib_dir": "/home/trungnt13/.cache/ort.pyke.io/dfbin/x86_64-unknown-linux-gnu/8BBB8416566A668A240B72A56DBBB82F99F430AF86F64D776D7EBF53E144EFC9/onnxruntime/lib"
+  },
+  "runs": [
+    {
+      "base_url": "http://127.0.0.1:38080",
+      "batch_size": 32,
+      "concurrency": 4,
+      "gpu_memory_mib": 1336,
+      "gpu_process_detected": true,
+      "image_height": 48,
+      "image_throughput_per_sec": 3566.9454489748127,
+      "image_width": 320,
+      "observed_latency_ms": {
+        "count": 160,
+        "max": 53.806616,
+        "mean": 35.547896543750014,
+        "min": 29.250247,
+        "p50": 35.06785,
+        "p95": 39.392987999999995,
+        "p99": 44.533113
+      },
+      "request_throughput_per_sec": 111.4670452804629,
+      "requests_per_worker": 40,
+      "response_model": "openocr-repsvtr",
+      "runtime_label": "tensorrt-ep",
+      "server_latency_ms": {
+        "count": 160,
+        "max": 53.0,
+        "mean": 34.66875,
+        "min": 28.0,
+        "p50": 34.0,
+        "p95": 38.0,
+        "p99": 44.0
+      },
+      "session_pool_size": 4,
+      "total_images": 5120,
+      "total_requests": 160,
+      "warmup_requests": 10
+    }
+  ]
+}

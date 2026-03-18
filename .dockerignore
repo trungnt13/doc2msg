@@ -1,0 +1,13 @@
+target/
+.git/
+.github/
+.idea/
+.vscode/
+.env
+.env.*
+ai-docs/
+tests/
+models/*
+!models/.gitkeep
+*.log
+

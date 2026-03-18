@@ -1,0 +1,167 @@
+{
+  "summary": {
+    "generated_at": "2026-03-18T00:16:52.628060+00:00",
+    "source_host": "tn",
+    "gpu": "NVIDIA GeForce RTX 3090, 580.126.20, 24576 MiB",
+    "ort_lib_dir": "/home/trungnt13/.cache/ort.pyke.io/dfbin/x86_64-unknown-linux-gnu/8BBB8416566A668A240B72A56DBBB82F99F430AF86F64D776D7EBF53E144EFC9/onnxruntime/lib",
+    "runtime_fix": "Prepended the ONNX Runtime provider directory to LD_LIBRARY_PATH so libonnxruntime_providers_shared.so resolves before CUDA/TensorRT EP registration.",
+    "tensorrt_runtime_libraries": [
+      "libnvinfer.so.10 => /lib/x86_64-linux-gnu/libnvinfer.so.10",
+      "libnvinfer_plugin.so.10 => /lib/x86_64-linux-gnu/libnvinfer_plugin.so.10",
+      "libnvonnxparser.so.10 => /lib/x86_64-linux-gnu/libnvonnxparser.so.10"
+    ],
+    "cuda_status": "validated on GPU",
+    "tensorrt_status": "validated on GPU",
+    "validation": {
+      "local_tests": "cargo test --quiet passed",
+      "remote_cuda_benchmark": "focused 4x32 benchmark completed with gpu_process_detected=true",
+      "remote_tensorrt_benchmark": "focused 4x32 benchmark completed with gpu_process_detected=true"
+    },
+    "sampling_note": "Earlier gpu=no rows came from an incomplete nvidia-smi sampling heuristic; authoritative GPU validation is now based on execution-provider registration, TensorRT whole-graph assignment / Cuda BFCArena log lines, and focused reruns with gpu_process_detected=true."
+  },
+  "cuda": {
+    "metadata": {
+      "generated_at": "2026-03-18T00:15:26.590097+00:00",
+      "host": "127.0.0.1",
+      "port": 38080,
+      "runtime_label": "cuda-ep",
+      "cargo_features": "cuda-ep",
+      "device_id": 0,
+      "requests_per_worker": 40,
+      "warmup_requests": 5,
+      "image_width": 320,
+      "image_height": 48,
+      "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39",
+      "gpu": "NVIDIA GeForce RTX 3090, 580.126.20, 24576 MiB",
+      "ort_lib_dir": "/home/trungnt13/.cache/ort.pyke.io/dfbin/x86_64-unknown-linux-gnu/8BBB8416566A668A240B72A56DBBB82F99F430AF86F64D776D7EBF53E144EFC9/onnxruntime/lib"
+    },
+    "runs": [
+      {
+        "base_url": "http://127.0.0.1:38080",
+        "batch_size": 32,
+        "concurrency": 4,
+        "gpu_memory_mib": 1438,
+        "gpu_process_detected": true,
+        "image_height": 48,
+        "image_throughput_per_sec": 2952.168550004131,
+        "image_width": 320,
+        "observed_latency_ms": {
+          "count": 160,
+          "max": 65.300293,
+          "mean": 42.7391697125,
+          "min": 33.770143000000004,
+          "p50": 41.931041,
+          "p95": 51.470012000000004,
+          "p99": 55.8023
+        },
+        "request_throughput_per_sec": 92.25526718762909,
+        "requests_per_worker": 40,
+        "response_model": "openocr-repsvtr",
+        "runtime_label": "cuda-ep",
+        "server_latency_ms": {
+          "count": 160,
+          "max": 64.0,
+          "mean": 41.88125,
+          "min": 33.0,
+          "p50": 41.0,
+          "p95": 51.0,
+          "p99": 55.0
+        },
+        "session_pool_size": 4,
+        "total_images": 5120,
+        "total_requests": 160,
+        "warmup_requests": 5
+      }
+    ]
+  },
+  "tensorrt": {
+    "metadata": {
+      "generated_at": "2026-03-18T00:15:10.579286+00:00",
+      "host": "127.0.0.1",
+      "port": 38080,
+      "runtime_label": "tensorrt-ep",
+      "cargo_features": "tensorrt-ep",
+      "device_id": 0,
+      "requests_per_worker": 40,
+      "warmup_requests": 10,
+      "image_width": 320,
+      "image_height": 48,
+      "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39",
+      "gpu": "NVIDIA GeForce RTX 3090, 580.126.20, 24576 MiB",
+      "ort_lib_dir": "/home/trungnt13/.cache/ort.pyke.io/dfbin/x86_64-unknown-linux-gnu/8BBB8416566A668A240B72A56DBBB82F99F430AF86F64D776D7EBF53E144EFC9/onnxruntime/lib"
+    },
+    "runs": [
+      {
+        "base_url": "http://127.0.0.1:38080",
+        "batch_size": 32,
+        "concurrency": 4,
+        "gpu_memory_mib": 1336,
+        "gpu_process_detected": true,
+        "image_height": 48,
+        "image_throughput_per_sec": 3566.9454489748127,
+        "image_width": 320,
+        "observed_latency_ms": {
+          "count": 160,
+          "max": 53.806616,
+          "mean": 35.547896543750014,
+          "min": 29.250247,
+          "p50": 35.06785,
+          "p95": 39.392987999999995,
+          "p99": 44.533113
+        },
+        "request_throughput_per_sec": 111.4670452804629,
+        "requests_per_worker": 40,
+        "response_model": "openocr-repsvtr",
+        "runtime_label": "tensorrt-ep",
+        "server_latency_ms": {
+          "count": 160,
+          "max": 53.0,
+          "mean": 34.66875,
+          "min": 28.0,
+          "p50": 34.0,
+          "p95": 38.0,
+          "p99": 44.0
+        },
+        "session_pool_size": 4,
+        "total_images": 5120,
+        "total_requests": 160,
+        "warmup_requests": 10
+      }
+    ]
+  },
+  "evidence": {
+    "cuda_server_log_excerpt": [
+      "2026-03-18T00:15:22.220031Z  INFO ort::execution_providers: Successfully registered `CUDAExecutionProvider` source=session options",
+      "2026-03-18T00:15:22.272601Z  WARN ort::logging: Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.",
+      "2026-03-18T00:15:22.312573Z  INFO ort::execution_providers: Successfully registered `CUDAExecutionProvider` source=session options",
+      "2026-03-18T00:15:22.340694Z  WARN ort::logging: Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf."
+    ],
+    "tensorrt_server_log_excerpt": [
+      "2026-03-18T00:13:52.670045Z  INFO ort::execution_providers: Successfully registered `TensorrtExecutionProvider` source=session options",
+      "2026-03-18T00:13:53.098168Z  INFO ort::logging: [TensorRT EP] Whole graph will run on TensorRT execution provider",
+      "2026-03-18T00:13:53.132295Z  INFO ort::execution_providers: Successfully registered `TensorrtExecutionProvider` source=session options",
+      "2026-03-18T00:13:53.205585Z  INFO ort::logging: [TensorRT EP] Whole graph will run on TensorRT execution provider"
+    ],
+    "nvidia_smi_peaks_mib": {
+      "cuda_ep": 1438,
+      "tensorrt_ep": 1336
+    },
+    "tensorrt_bfc_arena_excerpt": [
+      "2026-03-18T00:13:52.811988Z  INFO ort::logging: Creating BFCArena for Cuda with following configs: initial_chunk_size_bytes: 1048576 ...",
+      "2026-03-18T00:14:14.796234Z  INFO ort::logging: Extending BFCArena for Cuda. bin_num:17 (requested) num_bytes: 33920000 (actual) rounded_bytes:33920000"
+    ],
+    "remote_ldconfig_excerpt": [
+      "libnvinfer.so.10 => /lib/x86_64-linux-gnu/libnvinfer.so.10",
+      "libnvinfer_plugin.so.10 => /lib/x86_64-linux-gnu/libnvinfer_plugin.so.10",
+      "libnvonnxparser.so.10 => /lib/x86_64-linux-gnu/libnvonnxparser.so.10"
+    ]
+  },
+  "artifacts": {
+    "cuda_benchmark_json": "tests/benchmarks/ocr_benchmark_cuda_results.json",
+    "cuda_benchmark_txt": "tests/benchmarks/ocr_benchmark_cuda_results.txt",
+    "cuda_server_log": "tests/benchmarks/ocr_benchmark_cuda_server.log",
+    "tensorrt_benchmark_json": "tests/benchmarks/ocr_benchmark_trt_results.json",
+    "tensorrt_benchmark_txt": "tests/benchmarks/ocr_benchmark_trt_results.txt",
+    "tensorrt_server_log": "tests/benchmarks/ocr_benchmark_trt_server.log"
+  }
+}
