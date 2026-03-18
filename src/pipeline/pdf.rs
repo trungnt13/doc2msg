@@ -613,13 +613,21 @@ impl PdfPipeline {
             return Ok(self.build_fast_output(&source, start, &fast, false, None));
         }
 
-        let pdfium_status = match crate::pdfium::ensure_available() {
-            Ok(()) => CapabilityStatus::Available,
-            Err(error) => CapabilityStatus::Unavailable(error.to_string()),
+        // Check pdfium and OCR availability in parallel — both involve potentially
+        // expensive I/O (library binding, ONNX model loading) on first call.
+        let (pdfium_result, ocr_result) = tokio::join!(
+            tokio::task::spawn_blocking(crate::pdfium::ensure_available),
+            tokio::task::spawn_blocking(crate::ocr::shared_document_ocr),
+        );
+        let pdfium_status = match pdfium_result {
+            Ok(Ok(())) => CapabilityStatus::Available,
+            Ok(Err(error)) => CapabilityStatus::Unavailable(error.to_string()),
+            Err(join_error) => CapabilityStatus::Unavailable(join_error.to_string()),
         };
-        let ocr_status = match crate::ocr::shared_document_ocr() {
-            Ok(_) => CapabilityStatus::Available,
-            Err(error) => CapabilityStatus::Unavailable(error.to_string()),
+        let ocr_status = match ocr_result {
+            Ok(Ok(_)) => CapabilityStatus::Available,
+            Ok(Err(error)) => CapabilityStatus::Unavailable(error.to_string()),
+            Err(join_error) => CapabilityStatus::Unavailable(join_error.to_string()),
         };
 
         match plan_escalation(&fast.quality, &pdfium_status, &ocr_status) {

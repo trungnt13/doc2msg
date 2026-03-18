@@ -44,7 +44,7 @@ fn create_test_app(model_path: String, dict_path: String) -> axum::Router {
         inter_threads: 1,
         device_id: -1,
     };
-    let state = Arc::new(AppState::new(config));
+    let state = Arc::new(AppState::new(config).expect("test app state"));
     build_router(state)
 }
 

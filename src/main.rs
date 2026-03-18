@@ -19,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
     let args = CliArgs::parse();
     let config = RuntimeConfig::from_cli(&args);
 
-    let state = Arc::new(AppState::new(config.clone()));
+    let state = Arc::new(AppState::new(config.clone())?);
     let app = build_router(Arc::clone(&state));
 
     let addr = format!("{}:{}", config.host, config.port);

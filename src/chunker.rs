@@ -58,6 +58,34 @@ pub struct ImageRef {
     pub alt: Option<String>,
 }
 
+impl DocumentOutput {
+    /// Estimate the heap memory usage of this output in bytes.
+    pub fn estimated_size(&self) -> usize {
+        let mut size = 0;
+        size += self.title.as_ref().map_or(0, |s| s.len());
+        size += self.canonical_url.as_ref().map_or(0, |s| s.len());
+        size += self.markdown.len();
+        for chunk in &self.chunks {
+            size += chunk.text.len();
+            size += chunk.id.len();
+            size += chunk.section.as_ref().map_or(0, |s| s.len());
+        }
+        size += self.diagnostics.pipeline_used.len();
+        size += self
+            .diagnostics
+            .fallback_reason
+            .as_ref()
+            .map_or(0, |s| s.len());
+        if let Some(refs) = &self.image_manifest {
+            for img_ref in refs {
+                size += img_ref.url.as_ref().map_or(0, |s| s.len());
+                size += img_ref.alt.as_ref().map_or(0, |s| s.len());
+            }
+        }
+        size
+    }
+}
+
 /// Approximate token count: byte length / 4.
 pub fn estimate_tokens(text: &str) -> usize {
     text.len() / 4
@@ -207,17 +235,19 @@ fn split_oversized(text: &str, max_chars: usize) -> Vec<String> {
     if paragraphs.len() > 1 {
         let mut buf = String::new();
         for para in &paragraphs {
-            let addition = if buf.is_empty() {
-                para.to_string()
+            let addition_len = if buf.is_empty() {
+                para.len()
             } else {
-                format!("\n\n{para}")
+                para.len() + 2
             };
-            if buf.len() + addition.len() > max_chars && !buf.is_empty() {
-                result.push(buf.clone());
-                buf.clear();
+            if buf.len() + addition_len > max_chars && !buf.is_empty() {
+                result.push(std::mem::take(&mut buf));
                 buf.push_str(para);
             } else {
-                buf.push_str(&addition);
+                if !buf.is_empty() {
+                    buf.push_str("\n\n");
+                }
+                buf.push_str(para);
             }
         }
         if !buf.is_empty() {
@@ -262,8 +292,7 @@ fn split_at_sentences(text: &str, max_chars: usize) -> Vec<String> {
         if let Some(split_pos) = find_sentence_break(search_slice, max_chars) {
             let sentence = &remaining[..split_pos];
             if buf.len() + sentence.len() > max_chars && !buf.is_empty() {
-                result.push(buf.clone());
-                buf.clear();
+                result.push(std::mem::take(&mut buf));
             }
             buf.push_str(sentence);
             remaining = &remaining[split_pos..];
@@ -273,8 +302,7 @@ fn split_at_sentences(text: &str, max_chars: usize) -> Vec<String> {
                 buf.push_str(remaining);
                 remaining = "";
             } else if !buf.is_empty() {
-                result.push(buf.clone());
-                buf.clear();
+                result.push(std::mem::take(&mut buf));
                 // Don't advance remaining — retry with empty buffer.
             } else {
                 // Hard-split at max_chars, respecting char boundary.
@@ -323,12 +351,12 @@ fn find_char_boundary(s: &str, pos: usize) -> usize {
 }
 
 /// Build the overlap prefix from the previous chunk's text.
-fn overlap_prefix(prev_text: &str) -> String {
+fn overlap_prefix(prev_text: &str) -> &str {
     if prev_text.len() <= DEFAULT_OVERLAP_CHARS {
-        return prev_text.to_string();
+        return prev_text;
     }
     let start = find_char_boundary(prev_text, prev_text.len() - DEFAULT_OVERLAP_CHARS);
-    prev_text[start..].to_string()
+    &prev_text[start..]
 }
 
 /// Split markdown text into chunks by headings and size limits.
@@ -341,7 +369,7 @@ pub fn chunk_markdown(markdown: &str, max_chars: usize) -> Vec<Chunk> {
     let sections = split_into_sections(trimmed);
     let has_pages = has_page_markers(trimmed);
 
-    let mut chunks: Vec<Chunk> = Vec::new();
+    let mut chunks: Vec<Chunk> = Vec::with_capacity(sections.len());
     let mut chunk_index: usize = 0;
     let mut prev_text = String::new();
 
@@ -384,14 +412,15 @@ pub fn chunk_markdown(markdown: &str, max_chars: usize) -> Vec<Chunk> {
                 section.heading.as_ref().map(|h| format!("{h} (cont.)"))
             };
 
+            let token_estimate = estimate_tokens(&full_text);
             chunks.push(Chunk {
                 id,
-                text: full_text.clone(),
+                text: full_text,
                 section: section_label,
                 page_start: section.page_start,
                 page_end: section.page_end,
                 char_count,
-                token_estimate: estimate_tokens(&full_text),
+                token_estimate,
             });
 
             prev_text = frag_text.to_string();
@@ -573,5 +602,44 @@ mod tests {
         let chunks = chunk_markdown(text, DEFAULT_MAX_CHUNK_CHARS);
         // The `# Title` line itself is parsed as a section heading.
         assert!(chunks.len() >= 3);
+    }
+
+    /// Intent: Single character input produces one chunk without panicking (edge case: minimal input).
+    #[test]
+    fn test_single_char_input() {
+        let chunks = chunk_markdown("x", DEFAULT_MAX_CHUNK_CHARS);
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(chunks[0].text.trim(), "x");
+    }
+
+    /// Intent: Headings with no body text produce no chunks (empty sections are skipped).
+    #[test]
+    fn test_headings_with_no_body() {
+        let text = "## Heading One\n\n## Heading Two\n\n## Heading Three";
+        let chunks = chunk_markdown(text, DEFAULT_MAX_CHUNK_CHARS);
+        assert!(
+            chunks.is_empty(),
+            "headings without body text should produce no chunks"
+        );
+    }
+
+    /// Intent: Text exactly at max_chars boundary produces one chunk (no off-by-one split).
+    #[test]
+    fn test_exact_max_chars_boundary() {
+        let text = "a".repeat(2200);
+        let chunks = chunk_markdown(&text, 2200);
+        assert_eq!(chunks.len(), 1, "text exactly at limit should be one chunk");
+    }
+
+    /// Intent: All six heading levels (#–######) are recognized and create section labels.
+    #[test]
+    fn test_all_six_heading_levels() {
+        let text =
+            "# H1\n\nbody1\n\n## H2\n\nbody2\n\n### H3\n\nbody3\n\n#### H4\n\nbody4\n\n##### H5\n\nbody5\n\n###### H6\n\nbody6";
+        let chunks = chunk_markdown(text, DEFAULT_MAX_CHUNK_CHARS);
+        let sections: Vec<_> = chunks.iter().filter_map(|c| c.section.as_deref()).collect();
+        assert!(sections.contains(&"H1"));
+        assert!(sections.contains(&"H6"));
+        assert_eq!(chunks.len(), 6);
     }
 }

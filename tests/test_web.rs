@@ -30,7 +30,7 @@ fn test_config() -> RuntimeConfig {
 }
 
 fn create_test_app_with_config(config: RuntimeConfig) -> axum::Router {
-    let state = Arc::new(AppState::new(config));
+    let state = Arc::new(AppState::new(config).expect("test app state"));
     build_router(state)
 }
 
@@ -62,6 +62,7 @@ async fn parse_ndjson(response: axum::http::Response<Body>) -> Vec<serde_json::V
 // Health endpoint
 // -----------------------------------------------------------------------
 
+/// Intent: Health endpoint returns 200 with expected service metadata (status, version, pipelines, ocr flag).
 #[tokio::test]
 async fn test_health_endpoint() {
     let app = create_test_app();
@@ -95,6 +96,7 @@ async fn test_health_endpoint() {
 // Formats endpoint
 // -----------------------------------------------------------------------
 
+/// Intent: Formats endpoint lists all supported extraction types (web, pdf, markdown, plaintext).
 #[tokio::test]
 async fn test_formats_endpoint() {
     let app = create_test_app();
@@ -134,6 +136,7 @@ async fn test_formats_endpoint() {
 // Web extraction via /v1/extract/bytes with HTML
 // -----------------------------------------------------------------------
 
+/// Intent: HTML extraction produces valid NDJSON stream with metadata→chunks→done event sequence.
 #[tokio::test]
 async fn test_web_extract_bytes() {
     let app = create_test_app();
@@ -183,6 +186,7 @@ async fn test_web_extract_bytes() {
 // Web extraction preserves article content
 // -----------------------------------------------------------------------
 
+/// Intent: Readability extraction preserves meaningful article content from HTML (not just boilerplate).
 #[tokio::test]
 async fn test_web_extract_content_quality() {
     let app = create_test_app();
@@ -223,6 +227,7 @@ async fn test_web_extract_content_quality() {
 // Markdown passthrough via /v1/extract/bytes
 // -----------------------------------------------------------------------
 
+/// Intent: Markdown input passes through extraction pipeline and is classified as "markdown" source kind.
 #[tokio::test]
 async fn test_markdown_extract_bytes() {
     let app = create_test_app();
@@ -257,6 +262,7 @@ async fn test_markdown_extract_bytes() {
 // Plain text via /v1/extract/bytes
 // -----------------------------------------------------------------------
 
+/// Intent: Plain text input passes through extraction pipeline and is classified as "plaintext" source kind.
 #[tokio::test]
 async fn test_plaintext_extract_bytes() {
     let app = create_test_app();
@@ -291,6 +297,7 @@ async fn test_plaintext_extract_bytes() {
 // Empty body returns 400
 // -----------------------------------------------------------------------
 
+/// Intent: Empty request body returns 400 Bad Request (edge case: no content to extract).
 #[tokio::test]
 async fn test_extract_bytes_empty_body() {
     let app = create_test_app();
@@ -314,6 +321,7 @@ async fn test_extract_bytes_empty_body() {
 // OCR endpoint validation / availability
 // -----------------------------------------------------------------------
 
+/// Intent: OCR endpoint returns 501 Not Implemented when no OCR models are configured.
 #[tokio::test]
 async fn test_ocr_endpoint_returns_not_implemented_when_unconfigured() {
     let app = create_test_app();
@@ -346,6 +354,7 @@ async fn test_ocr_endpoint_returns_not_implemented_when_unconfigured() {
         .contains("OCR is not configured"));
 }
 
+/// Intent: OCR endpoint rejects malformed JSON payload (images field is not an array).
 #[tokio::test]
 async fn test_ocr_endpoint_rejects_invalid_payload() {
     let app = create_test_app();
@@ -375,6 +384,7 @@ async fn test_ocr_endpoint_rejects_invalid_payload() {
         .contains("invalid OCR request payload"));
 }
 
+/// Intent: OCR endpoint rejects corrupt base64 image data with 400 Bad Request.
 #[tokio::test]
 async fn test_ocr_endpoint_rejects_invalid_base64() {
     let app = create_test_app();
@@ -407,6 +417,7 @@ async fn test_ocr_endpoint_rejects_invalid_base64() {
         .contains("invalid base64 OCR image payload"));
 }
 
+/// Intent: OCR endpoint returns 503 when only partial OCR config is provided (model without dict).
 #[tokio::test]
 async fn test_ocr_endpoint_returns_service_unavailable_for_incomplete_config() {
     let mut config = test_config();
@@ -441,6 +452,7 @@ async fn test_ocr_endpoint_returns_service_unavailable_for_incomplete_config() {
         .contains("configuration is incomplete"));
 }
 
+/// Intent: Prometheus metrics endpoint tracks request counts, durations, cache hits/misses, and OCR usage.
 #[tokio::test]
 async fn test_metrics_endpoint_exposes_prometheus_metrics() {
     let app = create_test_app();

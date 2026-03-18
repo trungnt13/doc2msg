@@ -468,4 +468,40 @@ mod tests {
         assert!(is_list_item("10. double digit"));
         assert!(!is_list_item("regular text"));
     }
+
+    /// Intent: Nested triple-backtick inside a code block doesn't break block tracking.
+    #[test]
+    fn test_nested_code_block_markers() {
+        let input = "```\nsome code\n```nested```\nmore code\n```";
+        let result = normalize_markdown(input);
+        assert!(
+            result.contains("```nested```"),
+            "inner backticks should be preserved, got: {:?}",
+            result
+        );
+    }
+
+    /// Intent: Very long line (>10K chars) doesn't cause quadratic blowup or panic.
+    #[test]
+    fn test_very_long_line() {
+        let long_line = "word ".repeat(5000); // ~25K chars
+        let result = normalize_markdown(&long_line);
+        assert!(
+            result.len() > 1000,
+            "long line should produce substantial output"
+        );
+    }
+
+    /// Intent: Input consisting entirely of HTML tags produces clean output (not raw tags).
+    #[test]
+    fn test_all_html_tags_input() {
+        let input = "<div><p><span></span></p></div>";
+        let result = normalize_markdown(input);
+        let trimmed = result.trim();
+        assert!(
+            !trimmed.contains('<'),
+            "all HTML tags should be stripped, got: {:?}",
+            trimmed
+        );
+    }
 }

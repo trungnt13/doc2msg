@@ -137,19 +137,19 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(config: RuntimeConfig) -> Self {
+    pub fn new(config: RuntimeConfig) -> anyhow::Result<Self> {
         crate::pdfium::install_runtime_config(&config);
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
-            .connect_timeout(Duration::from_secs(10))
-            .pool_idle_timeout(Duration::from_secs(90))
+            .connect_timeout(Duration::from_secs(5))
+            .pool_idle_timeout(Duration::from_secs(120))
+            .pool_max_idle_per_host(32)
             .redirect(reqwest::redirect::Policy::limited(10))
             .gzip(true)
             .brotli(true)
-            .build()
-            .expect("failed to build reqwest client");
+            .build()?;
         let ocr_service = OcrService::from_config(&config);
-        Self {
+        Ok(Self {
             extraction_limiter: Arc::new(Semaphore::new(config.extraction_concurrency)),
             ocr_limiter: Arc::new(Semaphore::new(config.ocr_concurrency)),
             metrics: MetricsCollector::default(),
@@ -163,7 +163,7 @@ impl AppState {
             client,
             cache: InMemoryCache::new(DEFAULT_CACHE_ENTRIES),
             ocr_service,
-        }
+        })
     }
 
     pub fn in_flight_requests(&self) -> usize {
@@ -410,6 +410,10 @@ impl IntoResponse for AppError {
 // Extraction endpoints
 // ---------------------------------------------------------------------------
 
+fn stream_err(e: crate::stream::StreamError) -> AppError {
+    AppError::Internal(format!("stream error: {e}"))
+}
+
 fn default_mode() -> String {
     "auto".to_string()
 }
@@ -492,9 +496,9 @@ async fn extract_url(
         state.metrics.record_cache_hit(ROUTE_EXTRACT_URL);
         tracing::debug!(cache_key = %cache_key, url = %body.url, mode = %body.mode, "extract_url cache hit");
         return if body.stream {
-            Ok(crate::stream::ndjson_stream(output))
+            crate::stream::ndjson_stream(output).map_err(stream_err)
         } else {
-            Ok(crate::stream::json_response(&output))
+            crate::stream::json_response(&output).map_err(stream_err)
         };
     }
 
@@ -517,9 +521,9 @@ async fn extract_url(
     state.cache.put(cache_key, output.clone());
 
     if body.stream {
-        Ok(crate::stream::ndjson_stream(output))
+        crate::stream::ndjson_stream(Arc::new(output)).map_err(stream_err)
     } else {
-        Ok(crate::stream::json_response(&output))
+        crate::stream::json_response(&output).map_err(stream_err)
     }
 }
 
@@ -553,7 +557,7 @@ async fn extract_bytes(
             filename = ?filename,
             "extract_bytes cache hit"
         );
-        return Ok(crate::stream::ndjson_stream(output));
+        return crate::stream::ndjson_stream(output).map_err(stream_err);
     }
 
     state.metrics.record_cache_miss(ROUTE_EXTRACT_BYTES);
@@ -577,7 +581,7 @@ async fn extract_bytes(
     }
     state.cache.put(cache_key, output.clone());
 
-    Ok(crate::stream::ndjson_stream(output))
+    crate::stream::ndjson_stream(Arc::new(output)).map_err(stream_err)
 }
 
 #[derive(Deserialize)]
@@ -803,7 +807,7 @@ mod tests {
 
     #[tokio::test]
     async fn extract_bytes_uses_cached_output() {
-        let state = Arc::new(AppState::new(test_config()));
+        let state = Arc::new(AppState::new(test_config()).expect("test app state"));
         let app = build_router(Arc::clone(&state));
 
         let body = b"Original document body".to_vec();
@@ -856,7 +860,7 @@ mod tests {
     #[tokio::test]
     async fn extract_url_uses_cached_output_and_ignores_stream_flag() {
         let (url, server_handle) = start_test_content_server().await;
-        let state = Arc::new(AppState::new(test_config()));
+        let state = Arc::new(AppState::new(test_config()).expect("test app state"));
         let app = build_router(Arc::clone(&state));
 
         let first_response = app
@@ -943,7 +947,7 @@ mod tests {
     async fn extract_bytes_waits_for_extraction_capacity_and_tracks_in_flight_requests() {
         let mut config = test_config();
         config.extraction_concurrency = 1;
-        let state = Arc::new(AppState::new(config));
+        let state = Arc::new(AppState::new(config).expect("test app state"));
         let held_permit = Arc::clone(&state.extraction_limiter)
             .acquire_owned()
             .await
@@ -987,7 +991,7 @@ mod tests {
     async fn wait_for_drain_times_out_then_completes_after_request_finishes() {
         let mut config = test_config();
         config.extraction_concurrency = 1;
-        let state = Arc::new(AppState::new(config));
+        let state = Arc::new(AppState::new(config).expect("test app state"));
         let held_permit = Arc::clone(&state.extraction_limiter)
             .acquire_owned()
             .await
