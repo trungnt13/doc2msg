@@ -1,244 +1,153 @@
 # AGENTS.md — Doc2Agent
 
-## Project Overview
+Rust microservice that converts documents (web pages, PDFs, Markdown, images) into chunked Markdown streamed as NDJSON. Serves LLM agent CLIs (Codex, Copilot, Claude Code).
 
-Doc2Agent is a Rust microservice that converts documents (web pages, PDFs, Markdown, images) into clean, chunked Markdown text streamed as NDJSON. It serves LLM agent CLIs — Codex CLI, Copilot CLI, Claude Code — so they can ingest arbitrary URLs and files without native document parsing.
-
-**Core principle:** Progressive Escalation — try the cheapest extraction first, escalate to GPU OCR only when needed.
-
-**Stack:** Rust 1.85+, axum 0.8, reqwest 0.12, readability + html2md, pdf-extract, ort (ONNX Runtime) for OCR, Tokio, clap 4.5, tracing.
+**Core principle:** Progressive Escalation — cheapest extraction first, GPU OCR only when needed.
 
 ---
 
-## Setup & Commands
+## Agent Workflow
+
+### 1. Commit when done
+
+After completing a task, **commit your changes** with a clear, conventional message. Why: uncommitted work is invisible to other agents and easy to lose.
+
+```sh
+# Validate first — never commit broken code
+cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
+
+# Then commit with a descriptive message
+git add -A && git commit -m "feat(pipeline): implement web extraction with readability"
+```
+
+- One commit per logical task (not per file).
+- Use [Conventional Commits](https://www.conventionalcommits.org/): `feat`, `fix`, `refactor`, `docs`, `test`, `chore`.
+- Include scope: `feat(chunker):`, `fix(ocr):`, `docs(readme):`.
+- If a task spans multiple logical steps, multiple commits are fine — each should compile and pass tests.
+
+### 2. Use worktrees for parallel work
+
+When working on independent tasks simultaneously, use **git worktrees** instead of branches in the same checkout. Why: worktrees give each task its own working directory, eliminating merge conflicts and partial states from concurrent edits.
+
+```sh
+# Create a worktree for a parallel task
+git worktree add ../doc2msg-phase2 -b phase2/ocr-engine
+
+# Work in that directory independently
+cd ../doc2msg-phase2
+
+# When done, merge and clean up
+cd ../doc2msg
+git merge phase2/ocr-engine
+git worktree remove ../doc2msg-phase2
+```
+
+- Use worktrees when two tasks touch different modules and can proceed independently.
+- Name worktree directories `<repo>-<task>` for clarity.
+- Always remove worktrees after merging to avoid stale checkouts.
+
+### 3. Keep documentation concise with reasoning
+
+When writing or updating docs, **explain why, not just what**. Why: "what" becomes obvious from reading code — "why" is the part that gets lost.
+
+- Every rule or constraint should have a brief rationale (inline or parenthetical).
+- Prefer tables and bullet points over prose paragraphs.
+- Delete documentation that restates what the code already says.
+- Update docs in the same commit as the code change they describe.
+
+---
+
+## Commands
 
 | Action | Command |
 |--------|---------|
-| Install deps | `cargo build` (fetches all crates) |
-| Build (debug) | `cargo build` |
-| Build (release) | `cargo build --release` |
-| Build + CUDA OCR | `cargo build --release --features cuda-ep` |
-| Build + TensorRT OCR | `cargo build --release --features tensorrt-ep` |
-| Check (no codegen) | `cargo check` |
+| Build | `cargo build` |
+| Release build | `cargo build --release` |
+| Check (fast, no codegen) | `cargo check` |
 | Test | `cargo test` |
 | Lint | `cargo clippy -- -D warnings` |
 | Format | `cargo fmt` |
-| Format check | `cargo fmt -- --check` |
+| **Pre-commit (run before every commit)** | `cargo fmt -- --check && cargo clippy -- -D warnings && cargo test` |
 | Run server | `cargo run --release -- --host 0.0.0.0 --port 8080` |
-| Pre-commit | `cargo fmt -- --check && cargo clippy -- -D warnings && cargo test` |
-
----
-
-## Project Structure
-
-```
-doc2msg/
-├── AGENTS.md              # ← you are here
-├── Cargo.toml             # Workspace manifest, feature flags
-├── README.md              # User-facing docs
-├── run.sh                 # Dev convenience launcher
-├── ai-docs/
-│   └── doc2agent-implementation-plan.md  # Full design doc
-├── src/
-│   ├── main.rs            # CLI args (clap derive), server bootstrap
-│   ├── config.rs          # RuntimeConfig, env var overrides, feature toggles
-│   ├── server.rs          # Axum router, middleware stack, AppState
-│   ├── resolver.rs        # URL fetch, MIME sniffing, SourceDescriptor
-│   ├── pipeline/
-│   │   ├── mod.rs         # Pipeline trait + kind-based dispatcher
-│   │   ├── web.rs         # HTML → readability → html2md
-│   │   ├── pdf.rs         # pdf-extract (fast) + pdfium-render (rich, Phase 4)
-│   │   ├── image.rs       # Image decode → optional OCR
-│   │   └── markdown.rs    # Markdown passthrough + cleanup
-│   ├── ocr/
-│   │   ├── mod.rs         # OCR engine trait
-│   │   ├── recognizer.rs  # OpenOCR RepSVTR ONNX inference
-│   │   ├── detector.rs    # RepViT DB text detection (Phase 3)
-│   │   ├── preprocess.rs  # SIMD resize + normalization (fast_image_resize)
-│   │   └── decode.rs      # CTC beam decoder + dictionary
-│   ├── normalizer.rs      # Markdown cleanup, whitespace normalization
-│   ├── chunker.rs         # Heading/page-aware splitting (1200-2200 chars)
-│   ├── cache.rs           # Content-addressed result cache
-│   └── stream.rs          # NDJSON / SSE emitter
-├── models/                # ONNX models (gitignored, managed externally)
-└── tests/
-    ├── test_web.rs        # Web pipeline integration tests
-    ├── test_pdf.rs        # PDF pipeline integration tests
-    ├── test_ocr.rs        # OCR pipeline integration tests
-    └── fixtures/          # Sample HTML, PDF, PNG for tests
-```
+| GPU build (CUDA) | `cargo build --release --features cuda-ep` |
+| GPU build (TensorRT) | `cargo build --release --features tensorrt-ep` |
 
 ---
 
 ## Architecture
 
-### Progressive Escalation Pipeline
-
-Every request follows one path:
-
 ```
 fetch → classify(MIME) → cheap extraction → quality check → [rich render/OCR if needed] → normalize → chunk → stream
 ```
 
-Document types (`SourceKind`): `Web`, `Pdf`, `Image`, `Markdown`, `PlainText`. All converge to `DocumentOutput` which contains title, canonical URL, normalized Markdown, chunks, and diagnostics.
+Document types (`SourceKind`): `Web`, `Pdf`, `Image`, `Markdown`, `PlainText` → all converge to `DocumentOutput` (title, URL, Markdown, chunks, diagnostics).
 
-### NDJSON Streaming
+Responses stream as NDJSON — chunks emitted as soon as each section is ready, never buffered whole.
 
-Responses stream as newline-delimited JSON events:
+### Key paths
 
-```
-{"event":"metadata","title":"...","url":"...","source_kind":"Web"}
-{"event":"chunk","id":0,"text":"...","section":"Introduction","token_estimate":340}
-{"event":"chunk","id":1,"text":"...","section":"Methods","token_estimate":380}
-{"event":"done","chunks_total":12,"latency_ms":420}
-```
-
-Chunks are emitted as soon as each page/section is ready — do not buffer the entire document.
-
-### API Endpoints
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/v1/extract/url` | POST | Extract from URL (mode: auto/fast/rich/ocr) |
-| `/v1/extract/bytes` | POST | Extract from uploaded file bytes |
-| `/v1/ocr` | POST | Direct OCR for pre-cropped images |
-| `/health` | GET | Service health + GPU availability |
+| Path | Purpose |
+|------|---------|
+| `src/main.rs` | CLI args (clap derive), server bootstrap |
+| `src/server.rs` | Axum router, middleware, `AppState` |
+| `src/resolver.rs` | URL fetch, MIME sniffing |
+| `src/pipeline/` | Extraction per doc type — all implement `Pipeline` trait in `mod.rs` |
+| `src/ocr/` | ONNX-based OCR (detection + recognition) |
+| `src/chunker.rs` | Heading/page-aware splitting (1200–2200 chars) |
+| `src/stream.rs` | NDJSON emitter |
+| `tests/` | Integration tests + `fixtures/` |
+| `ai-docs/` | Full design doc and implementation plan |
 
 ---
 
-## Code Style & Conventions
+## Code Conventions
 
-### Error Handling
+**Error handling:** `thiserror` in library code, `anyhow` only in `main.rs`. Why: typed errors make pipeline failures actionable; `anyhow` is for top-level "print and exit".
 
-Use `thiserror` for typed library errors, `anyhow` only in `main.rs` / CLI glue:
+**Async:** I/O-bound work runs on Tokio directly. CPU-bound work (PDF parsing, image processing, OCR) goes in `spawn_blocking`. Why: blocking the Tokio runtime starves all concurrent requests.
 
-```rust
-use thiserror::Error;
+**No `unwrap()` / `expect()` in `src/`** — propagate with `?`. Why: panics crash the server for all clients, not just the bad request.
 
-#[derive(Error, Debug)]
-pub enum PipelineError {
-    #[error("fetch failed: {0}")]
-    Fetch(#[from] reqwest::Error),
-    #[error("extraction failed: {0}")]
-    Extraction(String),
-    #[error("ocr failed: {0}")]
-    Ocr(String),
-}
+**Single global `reqwest::Client`** in `AppState`. Why: connection pooling; creating a client per request leaks sockets.
 
-pub async fn extract(url: &str) -> Result<DocumentOutput, PipelineError> {
-    let response = client.get(url).send().await?;  // auto-converts via #[from]
-    // ...
-    todo!()
-}
-```
+**Logging:** `tracing` macros with structured fields (`url = %url, kind = ?kind`).
 
-### Async Patterns
-
-- **I/O-bound** (HTTP, file reads): run directly on Tokio runtime.
-- **CPU-bound** (PDF extraction, image processing, OCR pre/post): wrap in `tokio::task::spawn_blocking`.
-- Never block the Tokio runtime with synchronous computation or blocking I/O.
-
-### Naming
-
-| Kind | Convention | Example |
-|------|-----------|---------|
-| Files, functions, variables | `snake_case` | `resolve_url`, `chunk_text` |
-| Types, traits, enums | `CamelCase` | `SourceKind`, `Pipeline` |
-| Constants | `SCREAMING_SNAKE` | `MAX_CHUNK_SIZE` |
-| Feature flags | `kebab-case` | `cuda-ep`, `tensorrt-ep` |
-
-### Logging
-
-Use `tracing` macros with structured fields:
-
-```rust
-tracing::info!(url = %url, kind = ?source.source_kind, "starting extraction");
-tracing::debug!(chunks = result.chunks.len(), latency_ms = elapsed, "extraction complete");
-tracing::warn!(err = %e, "OCR fallback failed, returning partial result");
-```
-
-### Other Rules
-
-- No `unwrap()` or `expect()` in library code (`src/*`) — always propagate with `?`.
-- All extractors implement the `Pipeline` trait defined in `src/pipeline/mod.rs`.
-- CLI args use clap derive macros; every CLI flag has an env var override.
-- Global `reqwest::Client` lives in `AppState` — never construct a new one per request.
-
----
-
-## Testing
-
-| Command | Scope |
-|---------|-------|
-| `cargo test` | All tests |
-| `cargo test --test test_web` | Web pipeline only |
-| `cargo test --test test_pdf` | PDF pipeline only |
-| `cargo test --test test_ocr` | OCR pipeline only |
-
-- **Integration tests** live in `tests/` and use `axum::test` helpers for HTTP-level assertions.
-- **Fixtures** go in `tests/fixtures/` (sample HTML, PDF, PNG files).
-- Every new pipeline or feature must include corresponding tests.
-- OCR tests are gated behind the presence of model files in `models/`.
-
----
-
-## Key Design Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| OpenOCR RepSVTR Mobile for OCR | CTC decoding is fast, ONNX-native, no autoregressive overhead |
-| `ort` (ONNX Runtime) over Candle | TensorRT/CUDA execution providers for 10-50× GPU speedups |
-| `pdf-extract` for fast PDF path | Pure Rust, zero native dependencies, handles text-layer PDFs |
-| `pdfium-render` for rich PDF path (Phase 4) | Renders scanned/image-heavy pages to bitmap for OCR |
-| `readability` for HTML extraction | Battle-tested content extraction; wrapped behind trait for swappability |
-| NDJSON over SSE | Simpler framing, works with plain `curl`, no event-source boilerplate |
-| Feature flags for GPU (`cuda-ep`, `tensorrt-ep`) | CPU-only builds work everywhere; GPU is opt-in |
-
----
-
-## Workflow Guidelines
-
-1. Branch off `main` with descriptive names: `phase1/web-pipeline`, `fix/chunker-overlap`.
-2. Keep PRs focused — one phase or feature per PR.
-3. Run before every commit:
-   ```sh
-   cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
-   ```
-4. All changes go through PR review — do not push directly to `main`.
-5. Reference the implementation plan phase in PR descriptions.
+**Naming:** `snake_case` (files, fns, vars), `CamelCase` (types, traits), `SCREAMING_SNAKE` (constants), `kebab-case` (feature flags).
 
 ---
 
 ## Boundaries
 
-### Always Do
+**Always:**
+- Run `cargo check` after code changes.
+- Propagate errors with `?`.
+- Wrap CPU work in `spawn_blocking`.
+- Emit NDJSON incrementally — never buffer entire documents.
+- Use in-memory buffers, not temp files. Why: temp files add I/O latency and cleanup burden.
 
-- Run `cargo check` after any code change.
-- Use `?` operator for error propagation — never `unwrap()` in `src/`.
-- Wrap CPU-bound work in `spawn_blocking` (PDF parsing, image resize, OCR inference).
-- Reuse the global `reqwest::Client` from `AppState`.
-- Preserve streaming behavior — emit NDJSON chunks incrementally.
-- Use in-memory buffers for document processing, not temp files.
+**Ask first:**
+- Adding dependencies to `Cargo.toml`. Why: each dep is an attack surface and compile-time cost.
+- Changing API schemas, `Pipeline` trait, or chunking defaults.
+- Adding feature flags or modifying OCR models.
 
-### Ask First
+**Never:**
+- Modify `models/` — ONNX models are managed externally.
+- Commit `.env`, secrets, or API keys.
+- Construct `reqwest::Client` per request.
+- OCR unconditionally — progressive escalation only.
+- Ignore `cargo clippy` warnings.
 
-- Adding new dependencies to `Cargo.toml`.
-- Changing API response schemas or endpoint signatures.
-- Modifying the `Pipeline` trait signature.
-- Changing OCR model files or configuration.
-- Altering chunking defaults (1200–2200 chars, 100–200 char overlap).
-- Adding new feature flags.
+---
 
-### Never Do
+## Design Decisions
 
-- Modify files in `models/` — ONNX models are managed externally.
-- Commit `.env` files, secrets, or API keys.
-- Use `unwrap()` or `expect()` in library code (`src/*`).
-- Create temp files for document processing — use in-memory buffers.
-- Construct a new `reqwest::Client` per request — reuse `AppState.client`.
-- OCR all documents unconditionally — progressive escalation only.
-- Block the Tokio runtime with synchronous I/O or heavy computation.
-- Ignore `cargo clippy` warnings — they must be zero.
+| Decision | Why |
+|----------|-----|
+| NDJSON over SSE | Simpler framing, works with plain `curl`, no event-source boilerplate |
+| `readability` for HTML | Battle-tested extraction; wrapped behind trait for swappability |
+| `pdf-extract` for fast PDF | Pure Rust, zero native deps, handles text-layer PDFs |
+| `ort` (ONNX Runtime) for OCR | TensorRT/CUDA execution providers give 10–50× GPU speedup |
+| Feature flags for GPU | CPU-only builds work everywhere; GPU is opt-in |
 
 ---
 
@@ -246,50 +155,21 @@ tracing::warn!(err = %e, "OCR fallback failed, returning partial result");
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **1 — Web + Fast PDF** | axum server, reqwest fetcher, readability + html2md, pdf-extract, chunker, NDJSON streaming | **Up next** |
-| 2 — GPU OCR Engine | ort/ONNX Runtime, RepSVTR recognizer, session pool, SIMD preprocessing | Stubs only |
-| 3 — Full OCR Pipeline | RepViT DB detection + recognition, end-to-end image → text | Stubs only |
-| 4 — Rich PDF Fallback | pdfium-render, bitmap reuse, quality-based escalation to OCR | Stubs only |
-| 5 — Production Hardening | Content-addressed cache, Prometheus metrics, Docker image, load testing | Stubs only |
+| 1 — Web + Fast PDF | axum server, reqwest fetcher, readability + html2md, pdf-extract, chunker, NDJSON streaming | Up next |
+| 2 — GPU OCR Engine | ort/ONNX Runtime, RepSVTR recognizer, session pool, SIMD preprocessing | Stubs |
+| 3 — Full OCR Pipeline | RepViT DB detection + recognition, end-to-end image → text | Stubs |
+| 4 — Rich PDF Fallback | pdfium-render, bitmap reuse, quality-based escalation to OCR | Stubs |
+| 5 — Production Hardening | Content-addressed cache, Prometheus metrics, Docker, load testing | Stubs |
 
-Source file stubs exist for all phases. Implement Phase 1 fully before moving to Phase 2.
-
----
-
-## Performance Constraints
-
-These are hard requirements — do not introduce regressions:
-
-| Metric | Target |
-|--------|--------|
-| Web page → first chunk | < 500ms |
-| Text PDF → first chunk | < 300ms |
-| OCR recognition (batch=1) | < 15ms |
-| OCR throughput (RTX 3090) | > 1000 rec/s |
-| Concurrent requests | 64+ |
-
-**Implementation rules:**
-
-- Single global `reqwest::Client` — connection-pooled, reused across all requests.
-- SIMD preprocessing via `fast_image_resize` (AVX2/SSE4.1/Neon auto-selected).
-- OCR session pool: round-robin across N `ort::Session` instances, mutex-protected.
-- Execution provider priority: TensorRT EP → CUDA EP → CPU fallback.
-- Stream NDJSON chunks as soon as first page/section is ready — never buffer entire documents.
-- Reuse `PdfBitmap` allocations across pages (Phase 4) to avoid per-page heap allocation.
-- Split I/O (Tokio tasks) from compute (`spawn_blocking` or rayon thread pool).
+Implement phases sequentially. Full design: [`ai-docs/doc2agent-implementation-plan.md`](ai-docs/doc2agent-implementation-plan.md)
 
 ---
 
-## Reference
+## Performance Targets
 
-- **Full implementation plan:** [`ai-docs/doc2agent-implementation-plan.md`](ai-docs/doc2agent-implementation-plan.md)
-- **axum:** <https://docs.rs/axum/0.8>
-- **reqwest:** <https://docs.rs/reqwest/0.12>
-- **ort (ONNX Runtime):** <https://docs.rs/ort>
-- **pdf-extract:** <https://docs.rs/pdf-extract>
-- **readability:** <https://docs.rs/readability>
-- **html2md:** <https://docs.rs/html2md>
-- **fast_image_resize:** <https://docs.rs/fast_image_resize>
-- **tracing:** <https://docs.rs/tracing>
-- **clap:** <https://docs.rs/clap/4.5>
-- **thiserror:** <https://docs.rs/thiserror>
+| Metric | Target | Why it matters |
+|--------|--------|----------------|
+| Web → first chunk | < 500ms | Agents timeout on slow responses |
+| Text PDF → first chunk | < 300ms | Common doc type, must feel instant |
+| OCR (batch=1) | < 15ms | Bottleneck for scanned pages |
+| Concurrent requests | 64+ | Multiple agents hit the service simultaneously |
